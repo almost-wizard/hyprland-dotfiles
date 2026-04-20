@@ -36,19 +36,38 @@
   "exec": "bash ~/.config/waybar/scripts/kb_layout.sh --watch",
   "on-click": "bash ~/.config/waybar/scripts/kb_layout.sh --toggle"
 },
-"custom/refresh_rate": {
-  "tooltip": true,
+"custom/screenrec": {
   "format": "{}",
-  "exec": "bash ~/.config/hypr/scripts/power_refresh.sh --status",
-  "interval": 5,
-  "on-click": "bash ~/.config/hypr/scripts/power_refresh.sh --toggle; pkill -SIGRTMIN+9 waybar",
-  "signal": 9
+  "return-type": "json",
+  "exec": "bash ~/.config/hypr/scripts/screenrec.sh --waybar",
+  "interval": 1,
+  "on-click": "bash ~/.config/hypr/scripts/screenrec.sh --waybar-click",
+  "on-click-right": "setsid ~/.config/RofiScripts/Recorder/Recorder.sh",
+  "signal": 10
+},
+"custom/power_mode": {
+  "return-type": "json",
+  "format": "{}",
+  "exec": "bash ~/.config/waybar/scripts/power_mode.sh --status",
+  "interval": 1,
+  "on-click": "bash ~/.config/waybar/scripts/power_mode.sh --cycle",
+  "signal": 11
 },
 "hyprland/window": {
   "format": "{title}",
   "max-length": 80,
   "icon": true,
   "icon-size": 24,
+},
+"cpu": {
+  "interval": 2,
+  "format": " {usage}%",
+  "tooltip-format": "CPU load: {usage}%"
+},
+"memory": {
+  "interval": 2,
+  "format": " {used:0.1f}GiB",
+  "tooltip-format": "RAM used: {used:0.1f}GiB / {total:0.1f}GiB ({percentage}%)"
 },
 "hyprland/workspaces": {
  "disable-scroll": true,
@@ -80,11 +99,19 @@
 "tray",
  ],
 },
-"group/idlevol": {
+"group/volpower": {
  "orientation": "horizontal",
  "modules": [
 "group/volume",
-"idle_inhibitor"
+"custom/power_mode"
+ ]
+},
+"group/sysstats": {
+ "orientation": "horizontal",
+ "modules": [
+"cpu",
+"custom/cpu_temp",
+"memory"
  ]
 },
 "group/netblue": {
@@ -127,6 +154,7 @@
         }, 
 "network": {
   "tooltip": true,
+  "interval": 3,
   "format": "{icon}",
   "format-wifi" : "{icon}",
   "format-icons": {
@@ -139,7 +167,7 @@
   "tooltip-format-ethernet": " {ifname}",
   "tooltip-format-disconnected": "󰤦 Disconnected!",
   "tooltip-format-disabled": "󰤦 Connection turned off!",
-  "on-click": "hyprctl dispatch exec '[float; size 879 879] kitty nmtui'",
+  "on-click": "~/.config/hypr/scripts/toggle_tui.sh nmtui",
   "on-click-right": "setsid ~/.config/swaync/scripts/network.sh",
           },
 "bluetooth": {
@@ -151,7 +179,7 @@
   "tooltip-format-connected": "{controller_alias}\n{num_connections} Connected\n\n{device_alias}",
   "tooltip-format-enumerate-connected": "{device_alias}",
   "tooltip-format-enumerate-connected-battery": "{device_alias}\t󰥄 {device_battery_percentage}%",
-  "on-click": "hyprctl dispatch exec '[float; size 879 879] kitty bluetui'",
+  "on-click": "~/.config/hypr/scripts/toggle_tui.sh bluetui",
   "on-click-right": "setsid ~/.config/swaync/scripts/bluetooth.sh",
 },
 "custom/theme": {
@@ -194,15 +222,6 @@
   "pulseaudio/slider",
             ],
 }, 
-"idle_inhibitor": {
- "format": "{icon}",
- "format-icons": {
- "activated": "",
- "deactivated": "󰲓"
- },
- "tooltip-format-activated": "Working mode enabled",
- "tooltip-format-deactivated": "Working mode disabled",
-},
 "mpris": {
   "interval" : 1,
   "tooltip-format" : "{artist}",
@@ -227,13 +246,11 @@
     "tooltip-format": "{}  System package(s) ready for update" 
 },
 
- "temperature": {
-    "interval": 1,
-    "hwmon-path": "/sys/class/hwmon/hwmon3/temp1_input",
-    "critical-threshold": 80,
-    "format-critical": " {temperatureC}°C",
-    "format": " {temperatureC}°C",
-    "tooltip-format": " {}°C corresponds to the core temperature of the processor" 
+"custom/cpu_temp": {
+  "return-type": "json",
+  "exec": "bash ~/.config/waybar/scripts/cpu_temp.sh",
+  "format": "{}",
+  "tooltip": true
 },
     "custom/left_div#1": {
 		"format": "",

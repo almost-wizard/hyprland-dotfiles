@@ -16,12 +16,12 @@ back_label="← Back"
 	rc=$?
 
 if [ "$rc" -eq 10 ] || [ "$chosen" = "$back_label" ]; then
-	~/.config/RofiScripts/Launcher/Launcher.sh
+	~/.config/RofiScripts/Launcher/Appearance.sh
 	exit 0
 fi
 
 case "$chosen" in
-   "Dark Mode") ~/.config/RofiScripts/Dark-Light-Mode/Dark/dark.sh && ~/.config/nwg-dock-hyprland/launch.sh ;;
-   "Light Mode") ~/.config/RofiScripts/Dark-Light-Mode/Light/light.sh && ~/.config/nwg-dock-hyprland/launch.sh ;;
+   "Dark Mode") ~/.config/RofiScripts/Dark-Light-Mode/Dark/dark.sh ;;
+   "Light Mode") ~/.config/RofiScripts/Dark-Light-Mode/Light/light.sh ;;
    *) exit 1 ;;
 esac

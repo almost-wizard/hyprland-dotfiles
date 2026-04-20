@@ -201,7 +201,7 @@ window#waybar.empty #window {
 #mpris:hover, #custom-theme:hover, #custom-bar:hover, #custom-powermenu:hover, #custom-notifications:hover, #window:hover {
     color: @primary;
 }
-#battery, #custom-pacman, #temperature, #custom-auto_cpufreq, #custom-refresh_rate {
+#battery, #cpu, #custom-cpu_temp, #memory, #custom-pacman, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode {
     font-size: 1.32375rem;
     padding-left: 1.2rem;
     padding-right: 1.2rem;
@@ -210,8 +210,16 @@ window#waybar.empty #window {
     background-color: @surface_container;
     transition: 0.3s all ease;
 }
-#battery, #temperature, #custom-auto_cpufreq, #custom-refresh_rate { margin: 0.5rem 0.2rem; }
-#battery:hover, #custom-pacman:hover, #temperature:hover, #custom-auto_cpufreq:hover, #custom-refresh_rate:hover { color: @primary }
+#battery, #cpu, #custom-cpu_temp, #memory, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode { margin: 0.5rem 0.2rem; }
+#battery:hover, #cpu:hover, #custom-cpu_temp:hover, #memory:hover, #custom-pacman:hover, #custom-auto_cpufreq:hover, #custom-refresh_rate:hover, #custom-screenrec:hover, #custom-power_mode:hover { color: @primary }
+#custom-screenrec.recording { color: @error; }
+#custom-screenrec.idle {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    color: transparent;
+}
 #battery.critical:not(.charging) {
     color: @error;
 }
@@ -228,29 +236,19 @@ tooltip label {
     font-weight: bold;
     color: @on_background;
 }
-#idle_inhibitor {
-    background-color: @surface_container;
-    font-size: 1.32375rem; 
-    padding-left: 1.2rem;
-    padding-right: 1.2rem;
-    color: @secondary;
-    border-radius: 1.5rem;
-    transition: 0.3s all ease;
-}
-#idle_inhibitor:hover { color: @primary; }
-#custom-notifications, #custom-notifications:hover, #bluetooth, #bluetooth:hover, #idle_inhibitor, #idle_inhibitor:hover { font-size: 1.475rem }
+#custom-notifications, #custom-notifications:hover, #bluetooth, #bluetooth:hover { font-size: 1.475rem }
 #custom-System { font-size: 1.5rem }
 
 /* GROUP OVERRIDES */
 
-#volume, #pulseaudio, #idle_inhibitor {
+#volume, #pulseaudio, #custom-power_mode {
     background: none;
 }
 #volume { padding-right: 0.5rem }
-#idle_inhibitor { padding-left: 0.5rem }
+#custom-power_mode { padding-left: 0.5rem }
 
 
-#idlevol {
+#volpower {
     background: @surface_container;
     border-radius: 1.5rem;
     margin: 0.5rem 0.2rem;
@@ -262,6 +260,18 @@ tooltip label {
 #network { padding-right: 0.5rem }
 #bluetooth { padding-left: 0.5rem }
 #netblue {
+    background: @surface_container;
+    border-radius: 1.5rem;
+    margin: 0.5rem 0.2rem;
+}
+
+#cpu, #custom-cpu_temp, #memory {
+    background: none;
+}
+#cpu { padding-right: 0.5rem; }
+#custom-cpu_temp { padding-left: 0.5rem; padding-right: 0.5rem; }
+#memory { padding-left: 0.5rem; }
+#sysstats {
     background: @surface_container;
     border-radius: 1.5rem;
     margin: 0.5rem 0.2rem;

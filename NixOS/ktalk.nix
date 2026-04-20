@@ -86,9 +86,9 @@ stdenv.mkDerivation rec {
 
     wrapProgram $out/bin/ktalk \
       --set CHROME_ICU_DIR "$RESOURCES_DIR" \
-      --set NIXOS_OZONE_WL "0" \
-      --set ELECTRON_OZONE_PLATFORM_HINT "x11" \
+      --set NIXOS_OZONE_WL "1" \
+      --set ELECTRON_OZONE_PLATFORM_HINT "auto" \
       --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath buildInputs} \
-      --add-flags "--no-sandbox --ozone-platform=x11 --force-device-scale-factor=1.5 --enable-features=WebRTCPipeWireCapturer"
+      --add-flags "--no-sandbox --ozone-platform-hint=auto --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer"
   '';
 }

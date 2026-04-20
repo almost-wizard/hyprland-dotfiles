@@ -18,7 +18,6 @@ chosen=$(
 		" Permissions" \
 		" Programs" \
 		" Plugins" \
-		"󰆍 Scripts" \
 		" Windows and Workspaces" \
 		"󰥛 Animations (Variables!)" \
 		"󰘇 Decoration (Variables!)" |
@@ -27,7 +26,7 @@ chosen=$(
 rc=$?
 
 if [ "$rc" -eq 10 ] || [ "$chosen" = "$back_label" ]; then
-	~/.config/RofiScripts/SystemSettings/system.sh
+	~/.config/RofiScripts/Launcher/System.sh
 	exit 0
 fi
 
@@ -41,7 +40,6 @@ case "$chosen" in
    " Permissions") code ~/.config/hypr/hyprconfigs/hyprpermissions.conf ;;
    " Programs") code ~/.config/hypr/hyprconfigs/hyprprograms.conf ;;
    " Plugins") code ~/.config/hypr/hyprconfigs/hyprplugins.conf ;;
-   "󰆍 Scripts") ~/.config/RofiScripts/SystemSettings/scripts.sh ;;
    " Windows and Workspaces") code ~/.config/hypr/hyprconfigs/hyprwindowsandworkspaces.conf ;;
    "󰥛 Animations (Variables!)") code ~/.config/hypr/hyprconfigs/hypranimations.conf ;;
    "󰘇 Decoration (Variables!)") code ~/.config/hypr/hyprconfigs/hyprdecoration.conf ;;

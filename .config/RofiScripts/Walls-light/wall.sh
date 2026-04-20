@@ -4,7 +4,7 @@
 : "${LANG:=C.UTF-8}"
 export LC_ALL LANG
 
-DIR="$HOME/.config/RofiScripts/Walls-light/Walls"
+DIR="$HOME/Pictures/Wallpapers/Walls-light/Walls"
 
 selected=$(
 	{
@@ -26,4 +26,3 @@ matugen image "$DIR/$selected" -m light -t scheme-fidelity --fallback-color grey
 ln -sfn "$DIR/$selected" ~/.config/RofiScripts/Walls-light/Wall
 ln -sfn "$DIR/$selected" ~/.config/RofiScripts/WallpaperChanger/Wall
 ~/.config/hypr/scripts/sync-kbd-rgb.sh || true
-~/.config/nwg-dock-hyprland/launch.sh

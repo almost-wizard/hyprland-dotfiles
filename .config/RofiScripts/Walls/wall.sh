@@ -4,7 +4,7 @@
 : "${LANG:=C.UTF-8}"
 export LC_ALL LANG
 
-DIR="$HOME/.config/RofiScripts/Walls/Walls"
+DIR="$HOME/Pictures/Wallpapers/Walls-dark/Walls"
 
 selected=$(
 	{
@@ -27,4 +27,3 @@ ln -sfn "$DIR/$selected" ~/.config/RofiScripts/WallpaperChanger/Wall
 ~/.config/hypr/scripts/sync-kbd-rgb.sh || true
 
 swaync-client -rs
-~/.config/nwg-dock-hyprland/launch.sh

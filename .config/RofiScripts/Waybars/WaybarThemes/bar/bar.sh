@@ -6,7 +6,6 @@ hyprctl reload
 ln -sf ~/.config/RofiScripts/Waybars/WaybarThemes/bar/config.jsonc ~/.config/waybar/config.jsonc
 ln -sf ~/.config/RofiScripts/Waybars/WaybarThemes/bar/style.css ~/.config/waybar/style.css
 ln -sf ~/.config/RofiScripts/Waybars/WaybarThemes/bar/modules.jsonc ~/.config/waybar/modules.jsonc
-ln -sf ~/.config/ThemeSwitcher/Dock/style.css ~/.config/nwg-dock-hyprland/style.css
-ln -sf ~/.config/RofiScripts/Waybars/WaybarThemes/bar/launch.sh ~/.config/nwg-dock-hyprland/launch.sh
-killall .waybar-wrapped
-waybar
+pkill -x waybar 2>/dev/null || true
+pkill -x .waybar-wrapped 2>/dev/null || true
+waybar -l off -c ~/.config/waybar/config.jsonc -s ~/.config/waybar/style.css >/dev/null 2>&1 &

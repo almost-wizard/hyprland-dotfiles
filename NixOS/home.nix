@@ -319,7 +319,6 @@ in
     kdePackages.kamera
     nautilus
     nitch
-    nwg-dock-hyprland
     nwg-look
     obsidian
     pamixer

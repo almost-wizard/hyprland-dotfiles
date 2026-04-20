@@ -24,13 +24,25 @@ in
   # Bootloader
   boot.loader = {
     efi.canTouchEfiVariables = true;
-    timeout = 5;
+    efi.efiSysMountPoint = "/boot/efi";
+    timeout = 0;
     systemd-boot = {
       enable = true;
       configurationLimit = 5;
     };
   };
   boot.kernelPackages = pkgs.linuxPackages;
+  boot.initrd.availableKernelModules = [
+    "xhci_pci"
+    "thunderbolt"
+    "nvme"
+    "usb_storage"
+    "sd_mod"
+  ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+  boot.resumeDevice = "/dev/disk/by-uuid/c95c8d22-0de2-4e0d-a8f4-d0951c736c83";
   boot.plymouth = {
     enable = true;
     themePackages = [ pkgs.adi1090x-plymouth-themes ];
@@ -79,24 +91,41 @@ in
     HandleLidSwitchExternalPower = "hibernate";
   };
 
-  services.tlp = {
-    enable = true;
-    settings = {
-      CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+  # Use power-profiles-daemon for explicit manual profile switching.
+  # TLP conflicts with this workflow by reapplying AC/BAT policies.
+  services.tlp.enable = false;
+  services.power-profiles-daemon.enable = true;
+  services.thermald.enable = true;
+  # MateBook firmware exposes incomplete adaptive thermal zones for thermald.
+  # Run thermald in non-adaptive mode to avoid service startup failure.
+  systemd.services.thermald.serviceConfig.ExecStart = lib.mkForce
+    "${pkgs.thermald}/sbin/thermald --no-daemon --dbus-enable";
 
-      CPU_ENERGY_PERF_POLICY_ON_AC = "balance_performance";
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
-
-      CPU_BOOST_ON_AC = 1;
-      CPU_BOOST_ON_BAT = 0;
-
-      CPU_MAX_PERF_ON_AC = 100;
-      CPU_MAX_PERF_ON_BAT = 70;
-
-      RUNTIME_PM_ON_AC = "on";
-      RUNTIME_PM_ON_BAT = "auto";
+  systemd.services.auto-power-profile-on-battery = {
+    description = "Auto switch power profile to balanced on battery";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "power-profiles-daemon.service" ];
+    wants = [ "power-profiles-daemon.service" ];
+    serviceConfig = {
+      Type = "oneshot";
     };
+    script = ''
+      mains_online=0
+      for ps in /sys/class/power_supply/*; do
+        if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
+          if [ "$(cat "$ps/online")" = "1" ]; then
+            mains_online=1
+            break
+          fi
+        fi
+      done
+
+      if [ "$mains_online" = "0" ]; then
+        ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced || true
+      else
+        ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance || true
+      fi
+    '';
   };
 
   # Throne Settings
@@ -308,13 +337,13 @@ in
       libqalculate
       mission-center
       nix-search-tv
-      nwg-dock-hyprland
       gnome-themes-extra
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
       age
       bat
       bluez
+      btop
       bubblewrap
       cloc
       cmake
@@ -372,6 +401,7 @@ in
       tex-fmt
       texliveFull
       tree
+      tmux
       unzip
       unrar
       valgrind
@@ -402,6 +432,9 @@ in
 
   # Udev Settings
   services.udev.extraRules = ''
+    # Trigger auto power-profile switch service on AC plug/unplug events
+    SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_TYPE}=="Mains", TAG+="systemd", ENV{SYSTEMD_WANTS}+="auto-power-profile-on-battery.service"
+
     # Teevolution Terra
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f523", MODE="0666", TAG+="uaccess"
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f522", MODE="0666", TAG+="uaccess"

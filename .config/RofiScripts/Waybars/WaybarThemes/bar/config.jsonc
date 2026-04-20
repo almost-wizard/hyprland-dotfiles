@@ -19,12 +19,12 @@
  
 ],
  "modules-center": [
-  "hyprland/window",
+  "group/sysstats",
 ],
  "modules-right": [
-  "group/idlevol",
+  "custom/screenrec",
+  "group/volpower",
   "battery",
-  "custom/refresh_rate",
   "group/netblue",
   "custom/kb_layout",
   "group/traywermen",

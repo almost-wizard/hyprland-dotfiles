@@ -1,1 +1,0 @@
-/home/alex/.config/RofiScripts/Waybars/WaybarThemes/bar/launch.sh
