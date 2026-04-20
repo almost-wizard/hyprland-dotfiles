@@ -88,7 +88,7 @@ windowrule {
 windowrule {
   name = windowrule-12
   opacity = 0.90 0.85
-  match:class = VSCodium
+  match:class = code
 }
 
 windowrule {

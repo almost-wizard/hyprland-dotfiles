@@ -31,6 +31,6 @@
  ],
 ///////////////////////////
  "include": [
-  "/home/landilf/.config/waybar/modules.jsonc",
+  "/home/alex/.config/waybar/modules.jsonc",
 ],
 }

@@ -151,7 +151,7 @@
   "tooltip-format-connected": "{controller_alias}\n{num_connections} Connected\n\n{device_alias}",
   "tooltip-format-enumerate-connected": "{device_alias}",
   "tooltip-format-enumerate-connected-battery": "{device_alias}\t󰥄 {device_battery_percentage}%",
-  "on-click": "hyprctl dispatch exec '[float; size 879 879] blueman-manager'",
+  "on-click": "hyprctl dispatch exec '[float; size 879 879] kitty bluetui'",
   "on-click-right": "setsid ~/.config/swaync/scripts/bluetooth.sh",
 },
 "custom/theme": {
@@ -164,7 +164,7 @@
 "custom/bar": {
   "tooltip": false,
   "format" : "",
-  "on-click" : "/home/landilf/.config/ThemeSwitcher/Waybars/Waybar.sh",
+  "on-click" : "/home/alex/.config/ThemeSwitcher/Waybars/Waybar.sh",
               },
 "pulseaudio": {
   "tooltip": false,
@@ -305,7 +305,8 @@
 	"tooltip": false
 	},
 	"battery": {
-	    "bat": "BAT1",
+	    "bat": "BAT0",
+	    "adapter": "AC0",
 	    "states": {
 	        "good": 95,
 	        "warning": 30,

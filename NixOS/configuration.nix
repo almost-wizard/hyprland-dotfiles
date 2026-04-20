@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, pkgs-unstable, system, lib, ... }:
+{ config, pkgs, inputs, pkgs-unstable, lib, ... }:
 
 let
   sddmAstronautHyprlandKathTheme = pkgs.stdenvNoCC.mkDerivation {
@@ -12,55 +12,73 @@ let
       mv "$out/share/sddm/themes/sddm-astronaut-theme" "$out/share/sddm/themes/sddm-astronaut-theme-hyprland-kath"
       chmod -R u+w "$out/share/sddm/themes/sddm-astronaut-theme-hyprland-kath"
       substituteInPlace "$out/share/sddm/themes/sddm-astronaut-theme-hyprland-kath/metadata.desktop" \
-        --replace "ConfigFile=Themes/astronaut.conf" "ConfigFile=Themes/hyprland_kath.conf"
+        --replace "ConfigFile=Themes/astronaut.conf" "ConfigFile=Themes/black_hole.conf"
     '';
   };
 in
 {
-
   imports = [
     ./hardware-configuration.nix
   ];
 
   # Bootloader
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 5;
-  boot.loader.timeout = 0;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  # Use latest kernel
+  boot.loader = {
+    efi.canTouchEfiVariables = true;
+    timeout = 5;
+    systemd-boot = {
+      enable = true;
+      configurationLimit = 5;
+    };
+  };
   boot.kernelPackages = pkgs.linuxPackages;
-
-  # Time Settings
-  time.hardwareClockInLocalTime = false;
-
-  # Boot customization
   boot.plymouth = {
     enable = true;
     themePackages = [ pkgs.adi1090x-plymouth-themes ];
-    theme = "lone";
+    theme = "connect";
   };
-
-  boot.kernelParams = [ "quiet" "splash" "boot.shell_on_fail" "loglevel=3" "rd.systemd.show_status=false" "rd.udev.log_level=0" "udev.log_priority=0" "resume=UUID=c0428711-04a3-4adf-998d-d88af1d26e71" ];
-  boot.resumeDevice = "/dev/disk/by-uuid/c0428711-04a3-4adf-998d-d88af1d26e71";
+  boot.kernelParams = [
+    "quiet"
+    "splash"
+    "boot.shell_on_fail"
+    "loglevel=3"
+    "rd.systemd.show_status=false"
+    "rd.udev.log_level=0"
+    "udev.log_priority=0"
+  ];
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;
-  boot.initrd.kernelModules = [ "amdgpu" ];
 
   # Networking
-  networking.hostName = "nix-btw";
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
   networking.firewall.enable = true;
-  networking.firewall.trustedInterfaces = [ "docker0" "winapps0" ];
+  networking.firewall.trustedInterfaces = [ "docker0" ];
 
-  # Hibernation when closing the laptop lid
+  services.resolved.enable = true;
+  services.netbird.enable = true;
+
+  systemd.services.amnezia-vpn = {
+    description = "AmneziaVPN Background Service";
+    after = [ "network.target" "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs-unstable.amnezia-vpn}/bin/AmneziaVPN-service";
+      Restart = "always";
+      RestartSec = 5;
+      User = "root";
+      Group = "root";
+    };
+  };
+
+  # Power profiles
   services.logind.settings.Login = {
     HandleLidSwitch = "hibernate";
     HandleLidSwitchExternalPower = "hibernate";
   };
 
-  # Power profiles
   services.tlp = {
     enable = true;
     settings = {
@@ -89,19 +107,32 @@ in
     capabilities = "cap_net_admin+ep";
   };
 
+  # Throne TUN config talks to systemd-resolved through three privileged calls
+  # (default route, DNS servers, domains). Allow them for alex without 3 prompts.
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      var ids = [
+        "org.freedesktop.resolve1.set-default-route",
+        "org.freedesktop.resolve1.set-dns-servers",
+        "org.freedesktop.resolve1.set-domains"
+      ];
+      if (ids.indexOf(action.id) >= 0 && subject.user == "alex") {
+        return polkit.Result.YES;
+      }
+    });
+  '';
+
   # RPCS3 memory lock fix
   security.pam.loginLimits = [
     { domain = "@users"; type = "soft"; item = "memlock"; value = "unlimited"; }
     { domain = "@users"; type = "hard"; item = "memlock"; value = "unlimited"; }
   ];
-  
-  # KDE Connect Configuration
-  programs.kdeconnect.package = pkgs.kdePackages.kdeconnect-kde;
-  programs.kdeconnect.enable = true;
 
   # Localization
   time.timeZone = "Europe/Moscow";
-  i18n.defaultLocale = "ru_RU.UTF-8";
+  time.hardwareClockInLocalTime = false;
+  services.timesyncd.enable = true;
+  i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ru_RU.UTF-8";
     LC_IDENTIFICATION = "ru_RU.UTF-8";
@@ -114,44 +145,52 @@ in
     LC_TIME = "ru_RU.UTF-8";
   };
 
-  # Keyboard
   services.xserver.xkb = {
     layout = "us,ru";
     variant = "";
   };
   console.keyMap = "us";
 
+  # Environment variables
+  environment.localBinInPath = true;
+  environment.variables = {
+    QT_QPA_PLATFORM = "wayland";
+    _JAVA_OPTIONS = "-Dawt.toolkit.name=WLToolkit";
+    NIXOS_OZONE_WL = "1";
+    ELECTRON_ENABLE_WAYLAND = "1";
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+    EDITOR = "micro";
+    JAVA_HOME = "${pkgs.jdk21}/lib/openjdk";
+  };
+
   # User account
-  users.users.landilf = {
+  users.users.alex = {
     isNormalUser = true;
-    description = "Landilf";
+    description = "Alexander";
     extraGroups = [ "networkmanager" "wheel" "docker" "video" "input" "kvm" "adbusers" ];
     shell = pkgs.fish;
   };
 
-  # SwayOSD udev rules
-  services.udev.packages = [ pkgs.swayosd ];
-
-  # Home Manager
   home-manager.useUserPackages = true;
   home-manager.useGlobalPkgs = true;
   home-manager.backupFileExtension = "backup";
 
   # System-wide settings
   nixpkgs.config.allowUnfree = true;
+  programs.nix-ld.enable = true;
   zramSwap.enable = true;
 
   # Desktop Environment
   programs.hyprland.enable = true;
   programs.dconf.enable = true;
-  
-  # Shell (required for user shell)
   programs.fish.enable = true;
 
-  # SSH configuration
+  # Services
+  programs.kdeconnect.package = pkgs.kdePackages.kdeconnect-kde;
+  programs.kdeconnect.enable = true;
   programs.ssh.startAgent = true;
+  programs.adb.enable = true;
 
-  # Java configuration
   programs.java = {
     enable = true;
     package = pkgs.jdk21;
@@ -165,7 +204,7 @@ in
       "iptables" = true;
     };
   };
-  
+
   # Gaming
   programs.steam = {
     enable = true;
@@ -173,59 +212,31 @@ in
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
   };
+
   programs.gamescope = {
     enable = true;
     package = pkgs.gamescope;
   };
 
-  # Flatpak
-  services.flatpak.enable = false;
+  # Printing
+  services.printing.enable = true;
 
   # Hardware
   hardware.bluetooth.enable = true;
-  hardware.cpu.amd.updateMicrocode = true;
-  hardware.enableAllFirmware = true;
+  hardware.enableRedistributableFirmware = true;
+  hardware.opentabletdriver.enable = false;
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
-      nvidia-vaapi-driver
-      libva-vdpau-driver
-      libvdpau-va-gl
+      intel-vaapi-driver
+      intel-media-driver
     ];
   };
-  hardware.opentabletdriver = {
-    enable = false;
-  };
-
-  # NVIDIA + AMD Prime
-  services.xserver.videoDrivers = [ "amdgpu" "nvidia" ];
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = true;
-    powerManagement.finegrained = true;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.production;
-
-    prime = {
-      offload = {
-        enable = true;
-        enableOffloadCmd = true;
-      };
-      nvidiaBusId = "PCI:1:0:0";
-      amdgpuBusId = "PCI:54:0:0";
-    };
-  };
-
-  # OpenRGB
-  services.hardware.openrgb = {
-    enable = true;
-    motherboard = "amd";
-  };
-  systemd.services.openrgb.wantedBy = lib.mkForce [];
 
   # Audio
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     wireplumber.enable = true;
@@ -239,95 +250,161 @@ in
     enable = true;
     theme = "sddm-astronaut-theme-hyprland-kath";
     wayland.enable = true;
-    extraPackages = with pkgs; [ 
+    settings = {
+      General = {
+        GreeterEnvironment = "QT_SCALE_FACTOR=1.2,QT_SCREEN_SCALE_FACTORS=1.2,QT_SCALE_FACTOR_ROUNDING_POLICY=PassThrough";
+      };
+    };
+    extraPackages = with pkgs; [
       kdePackages.qtmultimedia
       kdePackages.qtsvg
       kdePackages.qtvirtualkeyboard
       kdePackages.qtbase
-    ]; 
+    ];
   };
 
   # XDG Portal
   xdg.portal = {
     enable = true;
+    xdgOpenUsePortal = true;
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
       xdg-desktop-portal-gtk
     ];
+    config = {
+      common = {
+        default = [ "hyprland" "gtk" ];
+      };
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+      };
+    };
   };
-  
-  # GVFS for trash support in file managers
+
   services.gvfs.enable = true;
 
+  # SwayOSD udev rules
+  services.udev.packages = [ pkgs.swayosd ];
+
   # System packages (only system-level stuff)
-  environment.systemPackages = 
+  environment.systemPackages =
     (with pkgs-unstable; [
+      amnezia-vpn
+      amneziawg-tools
       codex
-      easyeffects
       throne
       yandex-music
     ])
+    ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
     ++ (with pkgs; [
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
-      inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
-      bluez
-      bubblewrap
-      docker
-      docker-compose
-      drawio
+      aseprite
+      bluetui
       flameshot
       font-awesome
-      freerdp
-      fzf
-      gnome-themes-extra
-      kdePackages.kstatusnotifieritem
-      kdePackages.qt6ct
       killall
-      lazydocker
-      lazygit
       libnotify
       libqalculate
+      mission-center
+      nix-search-tv
+      nwg-dock-hyprland
+      gnome-themes-extra
+      sddm-astronaut
+      sddmAstronautHyprlandKathTheme
+      age
+      bat
+      bluez
+      bubblewrap
+      cloc
+      cmake
+      cpufetch
+      curl
+      discord
+      docker
+      docker-compose
+      duf
+      ffmpeg
+      freerdp
+      fzf
+      gcc
+      gdb
+      gimp3
+      gnumake
+      htop
+      jq
+      kdePackages.kcachegrind
+      kdePackages.kstatusnotifieritem
+      kdePackages.qt6ct
+      lazydocker
+      lazygit
       libsForQt5.qt5ct
       mangohud
-      mission-center
+      maven
+      micro
       neo
-      nix-search-tv
-      openrgb-with-all-plugins
+      netbird-ui
+      ninja
+      nixfmt-rfc-style
+      ntfs3g
+      openai-whisper
       p7zip
+      pipx
+      postman
       powertop
       ppsspp-sdl-wayland
       protonplus
+      python3
+      python3Packages.pip
+      python3Packages.tkinter
+      python3Packages.virtualenv
+      qgis
       rpcs3
+      ruff
+      ranger
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
       scanmem
+      scrcpy
+      stdenv
+      steam
       tenacity
+      tex-fmt
+      texliveFull
+      tree
+      unzip
+      unrar
+      valgrind
       vim
+      vscode
+      wget
       winetricks
-      xrandr
+      xclip
+      xsel
+      yt-dlp
     ]);
 
+  # Compatibility
   # Codex CLI expects a system bubblewrap at /usr/bin/bwrap.
   systemd.tmpfiles.rules = [
     "L+ /usr/bin/bwrap - - - - ${pkgs.bubblewrap}/bin/bwrap"
   ];
 
   # Fonts
-  fonts.packages = with pkgs; [ 
-    noto-fonts
-    adwaita-fonts
-    nerd-fonts.jetbrains-mono 
-    noto-fonts-cjk-sans
-  ];
-  
-  # Udev Settings
+  fonts.packages =
+    (builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts))
+    ++ [
+      pkgs.adwaita-fonts
+      pkgs.noto-fonts
+      pkgs.noto-fonts-cjk-sans
+      pkgs.noto-fonts-color-emoji
+    ];
 
-  # Teevolution Terra
- services.udev.extraRules = ''
+  # Udev Settings
+  services.udev.extraRules = ''
     # Teevolution Terra
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f523", MODE="0666", TAG+="uaccess"
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f522", MODE="0666", TAG+="uaccess" 
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f522", MODE="0666", TAG+="uaccess"
 
     # Wooting One Legacy
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff01", MODE="0666", TAG+="uaccess"
@@ -348,14 +425,13 @@ in
     SUBSYSTEM=="usb", ATTRS{idVendor}=="31e3", MODE="0666", TAG+="uaccess"
   '';
 
-  # Nix optimization
+  # Nix
   nix.gc = {
     automatic = true;
     dates = "weekly";
-    options = "--delete-older-than 7d";
+    options = "--delete-older-than 14d";
   };
 
-  # Nix settings
   nix.settings.auto-optimise-store = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 

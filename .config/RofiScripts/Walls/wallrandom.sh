@@ -1,6 +1,6 @@
 #! /bin/sh
 
-DIR="$HOME/Wallpapers"
+DIR="$HOME/.config/RofiScripts/Walls/Walls"
 LAST_WALLPAPER="$HOME/.config/RofiScripts/Walls/Last_Wallpaper.txt"
 
 files=("$DIR"/*)

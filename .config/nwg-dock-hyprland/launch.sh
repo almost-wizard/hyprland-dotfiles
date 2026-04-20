@@ -1,1 +1,1 @@
-/home/landilf/.config/RofiScripts/Waybars/WaybarThemes/bar/launch.sh
+/home/alex/.config/RofiScripts/Waybars/WaybarThemes/bar/launch.sh

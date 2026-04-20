@@ -9,33 +9,41 @@
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    prism-cracked.url = "github:Diegiwg/PrismLauncher-Cracked/develop";
-
     matugen = {
       url = "github:InioX/Matugen?ref=refs/tags/v3.1.0";
     };
+
   };
 
-  outputs = inputs @ { self, nixpkgs, home-manager, nixpkgs-unstable, prism-cracked, ... }: {
-    nixosConfigurations.nix-btw = nixpkgs.lib.nixosSystem {
+  outputs =
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nixpkgs-unstable,
+      ...
+    }:
+    let
       system = "x86_64-linux";
-      specialArgs = {
-        inherit inputs;
-        system = "x86_64-linux";
-        
-        pkgs-unstable = import nixpkgs-unstable {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
+    in
+    {
+      nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = {
+          inherit inputs system;
+          pkgs-unstable = import nixpkgs-unstable {
+            inherit system;
+            config.allowUnfree = true;
+          };
         };
-      };
 
-      modules = [ 
-        ./configuration.nix
-        home-manager.nixosModules.home-manager
-        {
-          home-manager.users.landilf = import ./home.nix;
-        }
-      ];
+        modules = [
+          ./configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            networking.hostName = "nixos";
+            home-manager.users.alex = import ./home.nix;
+          }
+        ];
+      };
     };
-  };
 }
