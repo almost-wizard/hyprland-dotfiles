@@ -1,0 +1,9 @@
+[[mgr.prepend_keymap]]
+on = ["!"]
+run = "shell --block \"fish -ic 'read --shell --prompt-str=\\\"fish> \\\" cmd; and eval $cmd'\""
+desc = "Run one fish command, then return to Yazi"
+
+[[mgr.prepend_keymap]]
+on = ["z", "!"]
+run = "shell --block \"exec fish\""
+desc = "Open fish here (full shell)"

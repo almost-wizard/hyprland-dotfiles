@@ -67,13 +67,9 @@ in
   home.username = "alex";
   home.homeDirectory = "/home/alex";
 
-  home.sessionVariables = {
-    ANDROID_HOME = "${config.home.homeDirectory}/ProgrammingSoftware/Android/Sdk";
-    ANDROID_SDK_ROOT = "${config.home.homeDirectory}/ProgrammingSoftware/Android/Sdk";
-  };
-
   # mimeApps
   xdg.mimeApps.enable = true;
+  xdg.configFile."mimeapps.list".force = true;
 
   xdg.mimeApps.defaultApplications = {
 
@@ -95,6 +91,11 @@ in
     "x-scheme-handler/http"  = [ "firefox.desktop" ];
     "x-scheme-handler/https" = [ "firefox.desktop" ];
     "application/pdf" = [ "firefox.desktop" ];
+    "application/x-pdf" = [ "firefox.desktop" ];
+    "application/acrobat" = [ "firefox.desktop" ];
+    "application/vnd.pdf" = [ "firefox.desktop" ];
+    "application/vnd.adobe.pdf" = [ "firefox.desktop" ];
+    "text/pdf" = [ "firefox.desktop" ];
 
     # ---- Microsoft Word ----
     "application/msword" =
@@ -169,6 +170,11 @@ in
 
   # Chromium 
   programs.chromium.enable = true;
+
+  # Force browser fallback to Firefox for tools that ignore mimeapps
+  home.sessionVariables = {
+    BROWSER = "firefox";
+  };
   
   # Fish shell configuration
   programs.fish = {
@@ -179,7 +185,9 @@ in
     '';
     functions = {
       kitty-theme = ''
+          kitty @ --to unix:/tmp/kitty set-colors /home/alex/.config/kitty/themes/Matugen.conf
           for socket in /tmp/kitty-*
+            test -S "$socket"; or continue
             kitty @ --to unix:$socket set-colors /home/alex/.config/kitty/themes/Matugen.conf
           end
       '';
@@ -193,11 +201,15 @@ in
       nfe = "vim /home/alex/hyprland-dotfiles/NixOS/flake.nix";
       try = "nix-shell -p";
       ncg = "sudo nix-collect-garbage -d";
-      cff = "reset && nitch";  
-      ns = "nix-search-tv print | fzf --preview 'nix-search-tv preview {}' --scheme history";
+      neo = "neo --colormode=32 -C /home/alex/.config/neo/colors-matugen.neo";
       ls = "eza -la";
       dcuw = "docker compose -f /home/alex/.config/windows-docker/compose.yaml up -d";
       dcdw = "docker compose -f /home/alex/.config/windows-docker/compose.yaml down";
+      dnd = "dragon-drop -x -A";
+      g = "lazygit";
+      d = "lazydocker";
+      dwa = "yt-dlp -x --audio-format mp3 --cookies-from-browser firefox -N 50";
+      dla = "yt-dlp -x --audio-format mp3 --enable-file-urls";
     };
   };
   
@@ -207,7 +219,7 @@ in
     enableFishIntegration = true;
   };
 
-  # Git configuration (add your details)
+  # Git configuration
   programs.git = {
     enable = true;
     settings = {
@@ -285,6 +297,11 @@ in
 
   programs.home-manager.enable = true;
 
+  home.file.".local/bin" = {
+    source = ../misc/bin;
+    recursive = true;
+  };
+
   # User-specific packages
   home.packages = with pkgs; [
     adw-gtk3
@@ -317,6 +334,7 @@ in
     dataGripWrapped
     jq
     kdePackages.kamera
+    libreoffice
     nautilus
     nitch
     nwg-look
@@ -327,6 +345,7 @@ in
     python3Packages.pip
     python3Packages.virtualenv
     pywalfox-native
+    rofimoji
     slurp
     socat
     stow

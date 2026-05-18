@@ -40,7 +40,6 @@
   "format": "{}",
   "return-type": "json",
   "exec": "bash ~/.config/hypr/scripts/screenrec.sh --waybar",
-  "interval": 1,
   "on-click": "bash ~/.config/hypr/scripts/screenrec.sh --waybar-click",
   "on-click-right": "setsid ~/.config/RofiScripts/Recorder/Recorder.sh",
   "signal": 10
@@ -49,7 +48,6 @@
   "return-type": "json",
   "format": "{}",
   "exec": "bash ~/.config/waybar/scripts/power_mode.sh --status",
-  "interval": 1,
   "on-click": "bash ~/.config/waybar/scripts/power_mode.sh --cycle",
   "signal": 11
 },
@@ -111,7 +109,8 @@
  "modules": [
 "cpu",
 "custom/cpu_temp",
-"memory"
+"custom/fan_speed",
+"custom/ram_stats"
  ]
 },
 "group/netblue": {
@@ -141,20 +140,19 @@
     "calendar": {
     "mode"          : "year",
 "mode-mon-col"  : 3,
-"weeks-pos"     : "",
+"weeks-pos"     : "right",
 "on-scroll"     : 1,
 "format": {
-"months":     "<span><b>{}</b></span>",
-"days":       "<span><b>{}</b></span>",
-"weeks":      "<span><b>W{}</b></span>",
-"weekdays":   "<span><b>{}</b></span>",
-"today":      "<span><b><u>{}</u></b></span>"
+"months":     "<span color='#8aa0a3'><b>{}</b></span>",
+"days":       "<span color='#1b1c1c'><b>{}</b></span>",
+"weeks":      "<span color='#727879'><b>W{}</b></span>",
+"weekdays":   "<span color='#4f6264'><b>{}</b></span>",
+"today":      "<span color='#ffffff' background='#4f6264'><b>{}</b></span>"
   }
         }, 
         }, 
 "network": {
   "tooltip": true,
-  "interval": 3,
   "format": "{icon}",
   "format-wifi" : "{icon}",
   "format-icons": {
@@ -223,7 +221,6 @@
             ],
 }, 
 "mpris": {
-  "interval" : 1,
   "tooltip-format" : "{artist}",
   "max-length": 80,
   "tooltip": true,
@@ -238,7 +235,6 @@
 },
 "custom/pacman": {
     "format": "{} ",
-    "interval": 3600,                     
     "exec": "checkupdates | wc -l",
     "exec-if": "exit 0",                  
     "on-click": "hyprctl dispatch exec \"[float; size 879 879] kitty bash -c \\\"figlet SYSTEMUPDATE! && yay -Syu && pkill -SIGRTMIN+8 waybar\\\"\"",
@@ -249,6 +245,20 @@
 "custom/cpu_temp": {
   "return-type": "json",
   "exec": "bash ~/.config/waybar/scripts/cpu_temp.sh",
+  "format": "{}",
+  "tooltip": true
+},
+"custom/fan_speed": {
+  "return-type": "json",
+  "exec": "bash ~/.config/waybar/scripts/fan_speed.sh",
+  "interval": 2,
+  "format": "{}",
+  "tooltip": true
+},
+"custom/ram_stats": {
+  "return-type": "json",
+  "exec": "bash ~/.config/waybar/scripts/ram_stats.sh",
+  "interval": 2,
   "format": "{}",
   "tooltip": true
 },

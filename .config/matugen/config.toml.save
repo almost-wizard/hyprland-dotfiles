@@ -56,3 +56,8 @@ output_path = '~/.config/qt6ct/colors/matugen.conf'
 input_path = '~/.config/matugen/templates/pywalfox-colors.json'
 output_path = '~/.cache/wal/colors.json'
 post_hook = 'pywalfox update'
+
+[templates.neo]
+input_path = '~/.config/matugen/templates/neo.json'
+output_path = '~/.cache/neo/matugen.json'
+post_hook = '~/.config/matugen/scripts/neo-colorfile.sh'

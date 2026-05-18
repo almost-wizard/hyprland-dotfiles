@@ -13,3 +13,4 @@ flake.nix
 flake.lock
 NixOS
 .gitignore
+.codex

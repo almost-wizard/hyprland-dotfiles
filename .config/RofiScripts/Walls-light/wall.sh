@@ -22,7 +22,7 @@ fi
 
 [ -z "$selected" ] && exit 0
 
-matugen image "$DIR/$selected" -m light -t scheme-fidelity --fallback-color grey
+matugen image "$DIR/$selected" -m light -t scheme-fidelity --contrast 0.45 --fallback-color grey
 ln -sfn "$DIR/$selected" ~/.config/RofiScripts/Walls-light/Wall
 ln -sfn "$DIR/$selected" ~/.config/RofiScripts/WallpaperChanger/Wall
 ~/.config/hypr/scripts/sync-kbd-rgb.sh || true

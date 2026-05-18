@@ -23,12 +23,13 @@ in
 
   # Bootloader
   boot.loader = {
-    efi.canTouchEfiVariables = true;
+    efi.canTouchEfiVariables = false;
     efi.efiSysMountPoint = "/boot/efi";
     timeout = 0;
     systemd-boot = {
       enable = true;
       configurationLimit = 5;
+      graceful = true;
     };
   };
   boot.kernelPackages = pkgs.linuxPackages;
@@ -45,8 +46,9 @@ in
   boot.resumeDevice = "/dev/disk/by-uuid/c95c8d22-0de2-4e0d-a8f4-d0951c736c83";
   boot.plymouth = {
     enable = true;
-    themePackages = [ pkgs.adi1090x-plymouth-themes ];
-    theme = "connect";
+    # themePackages = [ pkgs.adi1090x-plymouth-themes ];
+    # theme = "connect";
+    theme = "bgrt";
   };
   boot.kernelParams = [
     "quiet"
@@ -64,10 +66,11 @@ in
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
   networking.firewall.enable = true;
-  networking.firewall.trustedInterfaces = [ "docker0" ];
+  networking.firewall.trustedInterfaces = [ "docker0" "zt+" ];
 
   services.resolved.enable = true;
   services.netbird.enable = true;
+  services.zerotierone.enable = true;
 
   systemd.services.amnezia-vpn = {
     description = "AmneziaVPN Background Service";
@@ -184,6 +187,11 @@ in
   environment.localBinInPath = true;
   environment.variables = {
     QT_QPA_PLATFORM = "wayland";
+    QT_PLUGIN_PATH = [
+      "${pkgs.libsForQt5.qt5ct}/${pkgs.qt5.qtbase.qtPluginPrefix}"
+      "${pkgs.kdePackages.qt6ct}/${pkgs.qt6.qtbase.qtPluginPrefix}"
+      "${pkgs-unstable.qt6Packages.qt6ct}/${pkgs-unstable.qt6.qtbase.qtPluginPrefix}"
+    ];
     _JAVA_OPTIONS = "-Dawt.toolkit.name=WLToolkit";
     NIXOS_OZONE_WL = "1";
     ELECTRON_ENABLE_WAYLAND = "1";
@@ -213,6 +221,8 @@ in
   programs.hyprland.enable = true;
   programs.dconf.enable = true;
   programs.fish.enable = true;
+  qt.enable = true;
+  qt.platformTheme = "qt5ct";
 
   # Services
   programs.kdeconnect.package = pkgs.kdePackages.kdeconnect-kde;
@@ -295,7 +305,7 @@ in
   # XDG Portal
   xdg.portal = {
     enable = true;
-    xdgOpenUsePortal = true;
+    xdgOpenUsePortal = false;
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
       xdg-desktop-portal-gtk
@@ -321,12 +331,14 @@ in
       amnezia-vpn
       amneziawg-tools
       codex
+      qt6Packages.qt6ct
       throne
       yandex-music
     ])
     ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
     ++ (with pkgs; [
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
+      inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
       aseprite
       bluetui
@@ -352,6 +364,7 @@ in
       discord
       docker
       docker-compose
+      dragon-drop
       duf
       ffmpeg
       freerdp
@@ -377,8 +390,12 @@ in
       nixfmt-rfc-style
       ntfs3g
       openai-whisper
+      ollama
+      llama-cpp
       p7zip
+      haskellPackages.pdftotext
       pipx
+      playerctl
       postman
       powertop
       ppsspp-sdl-wayland
@@ -390,7 +407,6 @@ in
       qgis
       rpcs3
       ruff
-      ranger
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
       scanmem

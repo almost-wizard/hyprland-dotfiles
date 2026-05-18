@@ -28,7 +28,7 @@ if [ "$count" -gt 1 ] && [ -n "$last" ]; then
     done
 fi
 
-matugen image "$selected" -m light -t scheme-fidelity --fallback-color grey
+matugen image "$selected" -m light -t scheme-fidelity --contrast 0.45 --fallback-color grey
 
 ln -sfn "$selected" ~/.config/RofiScripts/Walls-light/Wall
 ln -sfn "$selected" ~/.config/RofiScripts/WallpaperChanger/Wall

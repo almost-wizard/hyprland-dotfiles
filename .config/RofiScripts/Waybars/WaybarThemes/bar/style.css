@@ -71,7 +71,7 @@ window#waybar {
 }
 #tray menu menuitem:hover:last-child { border-bottom-left-radius: 1.5rem; border-bottom-right-radius: 1.5rem }
 #tray menu menuitem:hover:first-child { border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem }
-#tray menu menuitem:hover { background-color: @surface_container_highest; color: @on_surface_variant; border-radius: 0; }
+#tray menu menuitem:hover { background-color: @surface_container_highest; color: @secondary; border-radius: 0; }
 #workspaces {
     margin: 0;
     padding-left: 0.75rem;
@@ -201,7 +201,7 @@ window#waybar.empty #window {
 #mpris:hover, #custom-theme:hover, #custom-bar:hover, #custom-powermenu:hover, #custom-notifications:hover, #window:hover {
     color: @primary;
 }
-#battery, #cpu, #custom-cpu_temp, #memory, #custom-pacman, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode {
+#battery, #cpu, #custom-cpu_temp, #custom-fan_speed, #memory, #custom-ram_stats, #custom-pacman, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode {
     font-size: 1.32375rem;
     padding-left: 1.2rem;
     padding-right: 1.2rem;
@@ -210,8 +210,8 @@ window#waybar.empty #window {
     background-color: @surface_container;
     transition: 0.3s all ease;
 }
-#battery, #cpu, #custom-cpu_temp, #memory, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode { margin: 0.5rem 0.2rem; }
-#battery:hover, #cpu:hover, #custom-cpu_temp:hover, #memory:hover, #custom-pacman:hover, #custom-auto_cpufreq:hover, #custom-refresh_rate:hover, #custom-screenrec:hover, #custom-power_mode:hover { color: @primary }
+#battery, #cpu, #custom-cpu_temp, #custom-fan_speed, #memory, #custom-ram_stats, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode { margin: 0.5rem 0.2rem; }
+#battery:hover, #cpu:hover, #custom-cpu_temp:hover, #custom-fan_speed:hover, #memory:hover, #custom-ram_stats:hover, #custom-pacman:hover, #custom-auto_cpufreq:hover, #custom-refresh_rate:hover, #custom-screenrec:hover, #custom-power_mode:hover { color: @primary }
 #custom-screenrec.recording { color: @error; }
 #custom-screenrec.idle {
     background: transparent;
@@ -224,17 +224,19 @@ window#waybar.empty #window {
     color: @error;
 }
 tooltip {
-    background-color: @background;
-    padding: 0.3125rem;
+    background-color: @surface_container;
+    padding: 0.85rem 1rem;
     color: @on_background;
     border-radius: 1.5rem;
-    border: 0 solid @border;
+    border: 0.08rem solid @surface_container_highest;
 }
 tooltip label {
-    padding: 0.3125rem;
+    padding: 0.3rem;
     border-radius: 1.5rem; 
     font-weight: bold;
     color: @on_background;
+    font-family: "JetBrainsMono Nerd Font Propo";
+    font-size: 1.18rem;
 }
 #custom-notifications, #custom-notifications:hover, #bluetooth, #bluetooth:hover { font-size: 1.475rem }
 #custom-System { font-size: 1.5rem }
@@ -265,12 +267,13 @@ tooltip label {
     margin: 0.5rem 0.2rem;
 }
 
-#cpu, #custom-cpu_temp, #memory {
+#cpu, #custom-cpu_temp, #custom-fan_speed, #memory, #custom-ram_stats {
     background: none;
 }
-#cpu { padding-right: 0.5rem; }
-#custom-cpu_temp { padding-left: 0.5rem; padding-right: 0.5rem; }
-#memory { padding-left: 0.5rem; }
+#cpu, #custom-cpu_temp, #custom-fan_speed, #memory, #custom-ram_stats {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
 #sysstats {
     background: @surface_container;
     border-radius: 1.5rem;
