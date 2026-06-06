@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, pkgs-unstable, hyprland, hyprspace, ... }:
 
 let
   ideaVersion = "2025.2.6.1";
@@ -63,13 +63,17 @@ in
   imports = [
   ];
 
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
   home.username = "alex";
   home.homeDirectory = "/home/alex";
 
   # mimeApps
   xdg.mimeApps.enable = true;
   xdg.configFile."mimeapps.list".force = true;
+  xdg.configFile."hypr/hyprconfigs/hyprspace-load.conf".text = ''
+    # Load the Nix-built hyprspace plugin before its config and binds are parsed.
+    plugin = ${hyprspace.packages.${pkgs.system}.Hyprspace}/lib/libHyprspace.so
+  '';
 
   xdg.mimeApps.defaultApplications = {
 
@@ -174,6 +178,8 @@ in
   # Force browser fallback to Firefox for tools that ignore mimeapps
   home.sessionVariables = {
     BROWSER = "firefox";
+    EDITOR = "micro";
+    JAVA_HOME = "${pkgs.jdk21}/lib/openjdk";
   };
   
   # Fish shell configuration
@@ -316,6 +322,7 @@ in
     dconf-editor
     decibels
     eza
+    exiftool
     file-roller
     gimp
     git
@@ -335,6 +342,7 @@ in
     jq
     kdePackages.kamera
     libreoffice
+    mediainfo
     nautilus
     nitch
     nwg-look
@@ -350,10 +358,11 @@ in
     socat
     stow
     swaynotificationcenter
-    swww
+    awww
     telegram-desktop
     tesseract
     unimatrix
+    pkgs-unstable.qt6Packages.qt6ct
     wf-recorder
     vscode
     waybar

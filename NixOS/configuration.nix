@@ -1,6 +1,8 @@
 { config, pkgs, inputs, pkgs-unstable, lib, ... }:
 
 let
+  desktopUser = builtins.head (builtins.attrNames config.home-manager.users);
+
   sddmAstronautHyprlandKathTheme = pkgs.stdenvNoCC.mkDerivation {
     pname = "sddm-astronaut-theme-hyprland-kath";
     version = "1";
@@ -41,7 +43,11 @@ in
     "sd_mod"
   ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
+  boot.kernelModules = [
+    "kvm-intel"
+    "uinput"
+    "xpad"
+  ];
   boot.extraModulePackages = [ ];
   boot.resumeDevice = "/dev/disk/by-uuid/c95c8d22-0de2-4e0d-a8f4-d0951c736c83";
   boot.plymouth = {
@@ -66,6 +72,10 @@ in
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
   networking.firewall.enable = true;
+  boot.kernel.sysctl = {
+    "fs.inotify.max_user_watches" = 1048576;
+    "fs.inotify.max_user_instances" = 1024;
+  };
   networking.firewall.trustedInterfaces = [ "docker0" "zt+" ];
 
   services.resolved.enable = true;
@@ -104,30 +114,131 @@ in
   systemd.services.thermald.serviceConfig.ExecStart = lib.mkForce
     "${pkgs.thermald}/sbin/thermald --no-daemon --dbus-enable";
 
-  systemd.services.auto-power-profile-on-battery = {
-    description = "Auto switch power profile to balanced on battery";
+  # systemd.services.auto-power-profile-on-battery = {
+  #   description = "Auto switch power profile to balanced on battery";
+  #   wantedBy = [ "multi-user.target" ];
+  #   after = [ "power-profiles-daemon.service" ];
+  #   wants = [ "power-profiles-daemon.service" ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #   };
+  #   script = ''
+  #     mains_online=0
+  #     for ps in /sys/class/power_supply/*; do
+  #       if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
+  #         if [ "$(cat "$ps/online")" = "1" ]; then
+  #           mains_online=1
+  #           break
+  #         fi
+  #       fi
+  #     done
+  #
+  #     if [ "$mains_online" = "0" ]; then
+  #       ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced || true
+  #     else
+  #       ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance || true
+  #     fi
+  #
+  #     # Signal waybar to update the power mode icon
+  #     ${pkgs.procps}/bin/pkill -SIGRTMIN+11 -u ${desktopUser} waybar || true
+  #   '';
+  # };
+
+  systemd.services.low-battery-monitor = {
+    description = "Notify on low battery and hibernate before power loss";
     wantedBy = [ "multi-user.target" ];
-    after = [ "power-profiles-daemon.service" ];
-    wants = [ "power-profiles-daemon.service" ];
+    after = [ "systemd-logind.service" ];
     serviceConfig = {
-      Type = "oneshot";
+      Type = "simple";
+      Restart = "always";
+      RestartSec = 10;
     };
     script = ''
-      mains_online=0
-      for ps in /sys/class/power_supply/*; do
-        if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
-          if [ "$(cat "$ps/online")" = "1" ]; then
-            mains_online=1
-            break
-          fi
-        fi
-      done
+      # Constants
+      USER_NAME=${lib.escapeShellArg desktopUser}
+      USER_UID=$(${pkgs.coreutils}/bin/id -u "$USER_NAME")
+      POLL_INTERVAL_SECONDS=60
+      FIRST_WARNING_PERCENT=15
+      CRITICAL_WARNING_PERCENT=5
+      HIBERNATE_PERCENT=2
+      HIBERNATE_DELAY_SECONDS=5
+      STATE_FILE=/run/low-battery-monitor.state
 
-      if [ "$mains_online" = "0" ]; then
-        ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced || true
-      else
-        ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance || true
-      fi
+      notify_user() {
+        urgency=$1
+        summary=$2
+        body=$3
+        runtime_dir="/run/user/$USER_UID"
+        bus="unix:path=$runtime_dir/bus"
+
+        if [ -S "$runtime_dir/bus" ]; then
+          ${pkgs.util-linux}/bin/runuser -u "$USER_NAME" -- \
+            env XDG_RUNTIME_DIR="$runtime_dir" DBUS_SESSION_BUS_ADDRESS="$bus" \
+            ${pkgs.libnotify}/bin/notify-send -u "$urgency" "$summary" "$body" || true
+        fi
+      }
+
+      while true; do
+        mains_online=0
+        battery_capacity=
+        battery_status=
+
+        for ps in /sys/class/power_supply/*; do
+          [ -e "$ps" ] || continue
+
+          if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
+            if [ "$(cat "$ps/online")" = "1" ]; then
+              mains_online=1
+            fi
+          fi
+
+          if [ -f "$ps/type" ] && [ -f "$ps/capacity" ] && [ "$(cat "$ps/type")" = "Battery" ]; then
+            status=Unknown
+            [ -f "$ps/status" ] && status=$(cat "$ps/status")
+
+            if [ -z "$battery_capacity" ] || [ "$status" = "Discharging" ]; then
+              battery_capacity=$(cat "$ps/capacity")
+              battery_status=$status
+            fi
+          fi
+        done
+
+        if [ -z "$battery_capacity" ]; then
+          sleep "$POLL_INTERVAL_SECONDS"
+          continue
+        fi
+
+        case "$battery_capacity" in
+          ""|*[!0-9]*)
+            sleep "$POLL_INTERVAL_SECONDS"
+            continue
+            ;;
+        esac
+
+        if [ "$mains_online" = "1" ] || [ "$battery_status" != "Discharging" ]; then
+          printf '%s\n' reset > "$STATE_FILE"
+          sleep "$POLL_INTERVAL_SECONDS"
+          continue
+        fi
+
+        last_state=
+        [ -r "$STATE_FILE" ] && last_state=$(cat "$STATE_FILE")
+
+        if [ "$battery_capacity" -le "$HIBERNATE_PERCENT" ]; then
+          notify_user critical "Battery critical" "Battery is at $battery_capacity%. Hibernating now."
+          printf '%s\n' hibernate > "$STATE_FILE"
+          sleep "$HIBERNATE_DELAY_SECONDS"
+          ${pkgs.systemd}/bin/systemctl hibernate
+        elif [ "$battery_capacity" -le "$CRITICAL_WARNING_PERCENT" ] && [ "$last_state" != "$CRITICAL_WARNING_PERCENT" ]; then
+          notify_user critical "Battery low" "Battery is at $battery_capacity%. Hibernation starts at $HIBERNATE_PERCENT%."
+          printf '%s\n' "$CRITICAL_WARNING_PERCENT" > "$STATE_FILE"
+        elif [ "$battery_capacity" -le "$FIRST_WARNING_PERCENT" ] && [ "$last_state" != "$FIRST_WARNING_PERCENT" ] && [ "$last_state" != "$CRITICAL_WARNING_PERCENT" ]; then
+          notify_user normal "Battery low" "Battery is at $battery_capacity%. Plug in the charger."
+          printf '%s\n' "$FIRST_WARNING_PERCENT" > "$STATE_FILE"
+        fi
+
+        sleep "$POLL_INTERVAL_SECONDS"
+      done
     '';
   };
 
@@ -148,7 +259,7 @@ in
         "org.freedesktop.resolve1.set-dns-servers",
         "org.freedesktop.resolve1.set-domains"
       ];
-      if (ids.indexOf(action.id) >= 0 && subject.user == "alex") {
+      if (ids.indexOf(action.id) >= 0 && subject.user == "${desktopUser}") {
         return polkit.Result.YES;
       }
     });
@@ -183,25 +294,10 @@ in
   };
   console.keyMap = "us";
 
-  # Environment variables
   environment.localBinInPath = true;
-  environment.variables = {
-    QT_QPA_PLATFORM = "wayland";
-    QT_PLUGIN_PATH = [
-      "${pkgs.libsForQt5.qt5ct}/${pkgs.qt5.qtbase.qtPluginPrefix}"
-      "${pkgs.kdePackages.qt6ct}/${pkgs.qt6.qtbase.qtPluginPrefix}"
-      "${pkgs-unstable.qt6Packages.qt6ct}/${pkgs-unstable.qt6.qtbase.qtPluginPrefix}"
-    ];
-    _JAVA_OPTIONS = "-Dawt.toolkit.name=WLToolkit";
-    NIXOS_OZONE_WL = "1";
-    ELECTRON_ENABLE_WAYLAND = "1";
-    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
-    EDITOR = "micro";
-    JAVA_HOME = "${pkgs.jdk21}/lib/openjdk";
-  };
 
   # User account
-  users.users.alex = {
+  users.users.${desktopUser} = {
     isNormalUser = true;
     description = "Alexander";
     extraGroups = [ "networkmanager" "wheel" "docker" "video" "input" "kvm" "adbusers" ];
@@ -218,7 +314,11 @@ in
   zramSwap.enable = true;
 
   # Desktop Environment
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    package = inputs.hyprland.packages.${pkgs.system}.hyprland;
+    withUWSM = true;
+  };
   programs.dconf.enable = true;
   programs.fish.enable = true;
   qt.enable = true;
@@ -228,7 +328,7 @@ in
   programs.kdeconnect.package = pkgs.kdePackages.kdeconnect-kde;
   programs.kdeconnect.enable = true;
   programs.ssh.startAgent = true;
-  programs.adb.enable = true;
+  # programs.adb.enable = true;
 
   programs.java = {
     enable = true;
@@ -263,11 +363,13 @@ in
   # Hardware
   hardware.bluetooth.enable = true;
   hardware.enableRedistributableFirmware = true;
+  hardware.xpadneo.enable = true;
   hardware.opentabletdriver.enable = false;
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
+      android-tools
       intel-vaapi-driver
       intel-media-driver
     ];
@@ -295,6 +397,7 @@ in
       };
     };
     extraPackages = with pkgs; [
+      android-tools
       kdePackages.qtmultimedia
       kdePackages.qtsvg
       kdePackages.qtvirtualkeyboard
@@ -307,7 +410,8 @@ in
     enable = true;
     xdgOpenUsePortal = false;
     extraPortals = with pkgs; [
-      xdg-desktop-portal-hyprland
+      xdg-desktop-portal-gtk
+      android-tools
       xdg-desktop-portal-gtk
     ];
     config = {
@@ -322,8 +426,13 @@ in
 
   services.gvfs.enable = true;
 
-  # SwayOSD udev rules
-  services.udev.packages = [ pkgs.swayosd ];
+  # SwayOSD and game controller udev rules
+  services.udev.packages = with pkgs; [
+      android-tools
+    game-devices-udev-rules
+    steam-devices-udev-rules
+    swayosd
+  ];
 
   # System packages (only system-level stuff)
   environment.systemPackages =
@@ -331,12 +440,13 @@ in
       amnezia-vpn
       amneziawg-tools
       codex
-      qt6Packages.qt6ct
+      gemini-cli
       throne
       yandex-music
     ])
     ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
     ++ (with pkgs; [
+      android-tools
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
       inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
@@ -382,19 +492,20 @@ in
       lazygit
       libsForQt5.qt5ct
       mangohud
+      evtest
+      gamepad-tool
       maven
       micro
       neo
       netbird-ui
       ninja
-      nixfmt-rfc-style
+      nixfmt
       ntfs3g
       openai-whisper
       ollama
       llama-cpp
       p7zip
       haskellPackages.pdftotext
-      pipx
       playerctl
       postman
       powertop
@@ -405,6 +516,7 @@ in
       python3Packages.tkinter
       python3Packages.virtualenv
       qgis
+      rar
       rpcs3
       ruff
       sddm-astronaut
@@ -428,6 +540,7 @@ in
       xclip
       xsel
       yt-dlp
+      zip
     ]);
 
   # Compatibility
@@ -448,8 +561,11 @@ in
 
   # Udev Settings
   services.udev.extraRules = ''
+    # Steam Input / controller remapping needs access to uinput.
+    KERNEL=="uinput", MODE="0660", GROUP="input", OPTIONS+="static_node=uinput", TAG+="uaccess"
+
     # Trigger auto power-profile switch service on AC plug/unplug events
-    SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_TYPE}=="Mains", TAG+="systemd", ENV{SYSTEMD_WANTS}+="auto-power-profile-on-battery.service"
+    # SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_TYPE}=="Mains", TAG+="systemd", ENV{SYSTEMD_WANTS}+="auto-power-profile-on-battery.service"
 
     # Teevolution Terra
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f523", MODE="0666", TAG+="uaccess"
@@ -484,5 +600,5 @@ in
   nix.settings.auto-optimise-store = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.05";
 }

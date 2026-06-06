@@ -43,18 +43,24 @@ next_refresh_label() {
   echo "󰖟 Toggle ${current_hz}Hz → ${target_hz}Hz"
 }
 
-refresh_item="$(next_refresh_label)"
+current_mode="$(bash "$HOME/.config/waybar/scripts/power_mode.sh" --get-only 2>/dev/null || echo "unknown")"
+
 set_perf_item="󰓅 Set Power Mode: performance"
 set_bal_item="󰾅 Set Power Mode: balanced"
 set_save_item="󰾆 Set Power Mode: power-saver"
+refresh_item="$(next_refresh_label)"
+
+[ "$current_mode" = "performance" ] && set_perf_item="$set_perf_item 󰄬"
+[ "$current_mode" = "balanced" ]    && set_bal_item="$set_bal_item 󰄬"
+[ "$current_mode" = "power-saver" ] && set_save_item="$set_save_item 󰄬"
 
 selected_index="$(
   printf "%s\n" \
     "$back_label" \
-    "$refresh_item" \
     "$set_perf_item" \
     "$set_bal_item" \
-    "$set_save_item" |
+    "$set_save_item" \
+    "$refresh_item" |
     rofi -dmenu -i -format i -selected-row 1 -config "$HOME/.config/RofiScripts/SystemSettings/S.rasi" \
       -theme-str 'window { width: 23em; }' \
       -kb-move-char-back "" -kb-move-char-forward "" -kb-custom-1 "Left" \
@@ -67,7 +73,19 @@ if [ "$rc" -eq 10 ] || [ "$selected_index" = "0" ]; then
   exit 0
 fi
 
-if [ "$selected_index" = "1" ]; then
+if [ "$selected_index" = "1" ] || [ "$selected_index" = "2" ] || [ "$selected_index" = "3" ]; then
+  target=""
+  case "$selected_index" in
+    1) target="performance" ;;
+    2) target="balanced" ;;
+    3) target="power-saver" ;;
+  esac
+
+  bash "$HOME/.config/waybar/scripts/power_mode.sh" --set "$target"
+  exit 0
+fi
+
+if [ "$selected_index" = "4" ]; then
   current_hz="$(detect_refresh_hz)"
   if [ -n "$current_hz" ] && [ "$current_hz" -ge 90 ] 2>/dev/null; then
     target_hz="60"
@@ -83,20 +101,6 @@ if [ "$selected_index" = "1" ]; then
     printf "%s\n" "$target_hz" > "$refresh_state_file"
   fi
   [ -n "$cur" ] && notify "$cur"
-  exit 0
-fi
-
-if [ "$selected_index" = "2" ] || [ "$selected_index" = "3" ] || [ "$selected_index" = "4" ]; then
-  command -v powerprofilesctl >/dev/null 2>&1 || exit 1
-
-  target=""
-  case "$selected_index" in
-    2) target="performance" ;;
-    3) target="balanced" ;;
-    4) target="power-saver" ;;
-  esac
-
-  powerprofilesctl set "$target" >/dev/null 2>&1 || exit 1
   exit 0
 fi
 

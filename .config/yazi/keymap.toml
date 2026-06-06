@@ -1,9 +1,35 @@
+# Open files or enter directories with Enter.
+[[mgr.prepend_keymap]]
+on = ["<Enter>"]
+run = "plugin smart-enter"
+desc = "Enter directory or open file"
+
+# Copy yanked files to the Wayland clipboard as file URIs.
+[[mgr.prepend_keymap]]
+on = ["y"]
+run = ['shell -- for path in "$@"; do echo "file://$path"; done | wl-copy -t text/uri-list', "yank"]
+desc = "Yank and copy selected files to system clipboard"
+
+# Maximize or restore the preview pane.
+[[mgr.prepend_keymap]]
+on = ["T"]
+run = "plugin toggle-pane max-preview"
+desc = "Maximize or restore the preview pane"
+
+# Run a single fish command and return to Yazi.
 [[mgr.prepend_keymap]]
 on = ["!"]
 run = "shell --block \"fish -ic 'read --shell --prompt-str=\\\"fish> \\\" cmd; and eval $cmd'\""
 desc = "Run one fish command, then return to Yazi"
 
+# Open an interactive fish shell in the current directory.
 [[mgr.prepend_keymap]]
 on = ["z", "!"]
 run = "shell --block \"exec fish\""
 desc = "Open fish here (full shell)"
+
+# Send selected files to dragon-drop.
+[[mgr.prepend_keymap]]
+on  = ["<C-n>"]
+run = 'shell "dragon-drop -x -A -T $@"'
+desc = "Drag and drop"

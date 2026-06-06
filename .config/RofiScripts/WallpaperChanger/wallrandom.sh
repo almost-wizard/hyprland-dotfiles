@@ -1,1 +1,1 @@
-/home/alex/.config/RofiScripts/Walls/wallrandom.sh
+/home/alex/.config/RofiScripts/Walls-light/wallrandom.sh

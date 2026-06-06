@@ -10,13 +10,14 @@ get_mode() {
     echo "unavailable"
     return
   fi
-  powerprofilesctl get 2>/dev/null | tr -d '\r\n' || echo "unavailable"
+  # Trim whitespace
+  powerprofilesctl get 2>/dev/null | xargs echo -n || echo "unavailable"
 }
 
 print_status() {
   local mode tooltip cls icon
   mode="$(get_mode)"
-
+  
   case "$mode" in
     performance)
       tooltip="Power mode: performance"
@@ -34,9 +35,9 @@ print_status() {
       icon="󰾆"
       ;;
     *)
-      tooltip="Power mode: unavailable (run nrs)"
+      tooltip="Power mode: $mode (unavailable)"
       cls="mode-unavailable"
-      icon="󰾆"
+      icon="󰅚"
       ;;
   esac
 
@@ -55,19 +56,44 @@ cycle_mode() {
     *) next="balanced" ;;
   esac
 
-  powerprofilesctl set "$next" >/dev/null 2>&1 || exit 1
-  pkill -SIGRTMIN+"$WAYBAR_SIGNAL" -x waybar 2>/dev/null || true
+  set_mode "$next"
+}
+
+set_mode() {
+  have powerprofilesctl || exit 0
+  local target="$1"
+  
+  # Set power profile
+  powerprofilesctl set "$target" >/dev/null 2>&1 || exit 1
+  
+  # Wait briefly for state change
+  local i=0
+  while [ "$i" -lt 5 ]; do
+    [ "$(get_mode)" = "$target" ] && break
+    sleep 0.1
+    i=$((i + 1))
+  done
+
+  # Signal waybar to update icon
+  pkill -RTMIN+"$WAYBAR_SIGNAL" waybar 2>/dev/null || true
 }
 
 case "${1:-}" in
   --status|"")
     print_status
     ;;
+  --get-only)
+    get_mode
+    ;;
   --cycle)
     cycle_mode
     ;;
+  --set)
+    [ -n "${2:-}" ] || exit 1
+    set_mode "$2"
+    ;;
   *)
-    echo "Usage: $0 [--status|--cycle]" >&2
+    echo "Usage: $0 [--status|--get-only|--cycle|--set <mode>]" >&2
     exit 2
     ;;
 esac

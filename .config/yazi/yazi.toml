@@ -1,0 +1,24 @@
+# Keep large previews usable without disabling Yazi's safety limits entirely.
+[preview]
+max_width  = 10000
+max_height = 10000
+
+[tasks]
+image_alloc = 536870912
+image_bound = [12000, 12000]
+
+[plugin]
+# Use exiftool/mediainfo for richer Tab metadata on common media files.
+prepend_spotters = [
+  { mime = "image/*", run = "rich-metadata" },
+  { mime = "{audio,video}/*", run = "rich-metadata" },
+  { mime = "application/pdf", run = "rich-metadata" },
+]
+
+append_spotters = [
+  { url = "*", run = "rich-metadata" },
+]
+
+append_previewers = [
+  { url = "*", run = "rich-metadata" },
+]
