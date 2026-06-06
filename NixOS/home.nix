@@ -1,4 +1,4 @@
-{ config, pkgs, pkgs-unstable, hyprland, hyprspace, ... }:
+{ config, pkgs, pkgs-obsidian-old, pkgs-unstable, hyprland, hyprspace, ... }:
 
 let
   ideaVersion = "2025.2.6.1";
@@ -346,7 +346,8 @@ in
     nautilus
     nitch
     nwg-look
-    obsidian
+    # Temporary pin: current Obsidian from updated nixpkgs regressed after the 2026-06-06 system update.
+    pkgs-obsidian-old.obsidian
     pamixer
     pavucontrol
     python3
