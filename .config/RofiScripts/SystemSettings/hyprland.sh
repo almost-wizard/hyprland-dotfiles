@@ -18,7 +18,8 @@ chosen=$(
 		" Permissions" \
 		" Programs" \
 		" Plugins" \
-		" Windows and Workspaces" \
+		" Window Rules" \
+		"󱂬 Auto Window Rules" \
 		"󰥛 Animations (Variables!)" \
 		"󰘇 Decoration (Variables!)" |
 		rofi -dmenu -i -selected-row 1 -config "$HOME/.config/RofiScripts/SystemSettings/S_hyprland.rasi" -kb-move-char-back "" -kb-move-char-forward "" -kb-custom-1 "Left" -kb-accept-entry "Control+j,Control+m,Return,KP_Enter,Right"
@@ -40,7 +41,8 @@ case "$chosen" in
    " Permissions") code ~/.config/hypr/hyprconfigs/hyprpermissions.conf ;;
    " Programs") code ~/.config/hypr/hyprconfigs/hyprprograms.conf ;;
    " Plugins") code ~/.config/hypr/hyprconfigs/hyprplugins.conf ;;
-   " Windows and Workspaces") code ~/.config/hypr/hyprconfigs/hyprwindowsandworkspaces.conf ;;
+   " Window Rules") code ~/.config/hypr/hyprconfigs/hyprwindowsandworkspaces.conf ;;
+   "󱂬 Auto Window Rules") code ~/.config/hypr/hyprconfigs/hyprwindows-local.conf ;;
    "󰥛 Animations (Variables!)") code ~/.config/hypr/hyprconfigs/hypranimations.conf ;;
    "󰘇 Decoration (Variables!)") code ~/.config/hypr/hyprconfigs/hyprdecoration.conf ;;
    *) exit 1 ;;

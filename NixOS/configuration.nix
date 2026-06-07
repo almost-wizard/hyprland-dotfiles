@@ -250,16 +250,15 @@ in
     capabilities = "cap_net_admin+ep";
   };
 
-  # Throne TUN config talks to systemd-resolved through three privileged calls
-  # (default route, DNS servers, domains). Allow them for alex without 3 prompts.
+  # Throne talks to systemd-resolved for per-link DNS and routing changes.
+  # Allow the full resolve1 action namespace for alex to avoid repeated
+  # polkit prompts on connect/disconnect and profile stop.
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
-      var ids = [
-        "org.freedesktop.resolve1.set-default-route",
-        "org.freedesktop.resolve1.set-dns-servers",
-        "org.freedesktop.resolve1.set-domains"
-      ];
-      if (ids.indexOf(action.id) >= 0 && subject.user == "${desktopUser}") {
+      if (
+        subject.user == "${desktopUser}" &&
+        action.id.indexOf("org.freedesktop.resolve1.") === 0
+      ) {
         return polkit.Result.YES;
       }
     });
@@ -325,10 +324,8 @@ in
   qt.platformTheme = "qt5ct";
 
   # Services
-  programs.kdeconnect.package = pkgs.kdePackages.kdeconnect-kde;
-  programs.kdeconnect.enable = true;
   programs.ssh.startAgent = true;
-  # programs.adb.enable = true;
+  programs.adb.enable = true;
 
   programs.java = {
     enable = true;
@@ -369,7 +366,6 @@ in
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
-      android-tools
       intel-vaapi-driver
       intel-media-driver
     ];
@@ -397,7 +393,6 @@ in
       };
     };
     extraPackages = with pkgs; [
-      android-tools
       kdePackages.qtmultimedia
       kdePackages.qtsvg
       kdePackages.qtvirtualkeyboard
@@ -411,7 +406,6 @@ in
     xdgOpenUsePortal = false;
     extraPortals = with pkgs; [
       xdg-desktop-portal-gtk
-      android-tools
       xdg-desktop-portal-gtk
     ];
     config = {
@@ -428,7 +422,6 @@ in
 
   # SwayOSD and game controller udev rules
   services.udev.packages = with pkgs; [
-      android-tools
     game-devices-udev-rules
     steam-devices-udev-rules
     swayosd
@@ -446,19 +439,16 @@ in
     ])
     ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
     ++ (with pkgs; [
-      android-tools
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
       inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
       aseprite
       bluetui
-      flameshot
       font-awesome
       killall
       libnotify
       libqalculate
       mission-center
-      nix-search-tv
       gnome-themes-extra
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
@@ -469,7 +459,6 @@ in
       bubblewrap
       cloc
       cmake
-      cpufetch
       curl
       discord
       docker
@@ -485,8 +474,6 @@ in
       gnumake
       htop
       jq
-      kdePackages.kcachegrind
-      kdePackages.kstatusnotifieritem
       kdePackages.qt6ct
       lazydocker
       lazygit

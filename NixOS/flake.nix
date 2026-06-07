@@ -5,7 +5,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-obsidian-old.url = "github:nixos/nixpkgs/ff06bd3398fb1bea6c937039ece7e7c8aa396ebf";
 
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -30,7 +29,6 @@
       nixpkgs,
       home-manager,
       nixpkgs-unstable,
-      nixpkgs-obsidian-old,
       hyprland,
       hyprspace,
       ...
@@ -41,10 +39,6 @@
         inherit system;
         config.allowUnfree = true;
       };
-      oldObsidianPkgs = import nixpkgs-obsidian-old {
-        inherit system;
-        config.allowUnfree = true;
-      };
     in
     {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
@@ -52,7 +46,6 @@
         specialArgs = {
           inherit inputs system hyprland hyprspace;
           pkgs-unstable = unstablePkgs;
-          pkgs-obsidian-old = oldObsidianPkgs;
         };
 
         modules = [
@@ -63,7 +56,6 @@
             home-manager.extraSpecialArgs = {
               inherit hyprland hyprspace;
               pkgs-unstable = unstablePkgs;
-              pkgs-obsidian-old = oldObsidianPkgs;
             };
             home-manager.users.alex = import ./home.nix;
           }

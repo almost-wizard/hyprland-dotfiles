@@ -1,4 +1,4 @@
-{ config, pkgs, pkgs-obsidian-old, pkgs-unstable, hyprland, hyprspace, ... }:
+{ config, pkgs, pkgs-unstable, hyprland, hyprspace, ... }:
 
 let
   ideaVersion = "2025.2.6.1";
@@ -239,15 +239,6 @@ in
   # SwayOSD service
   services.swayosd.enable = true;
 
-  # KDE Connect configuration
-  services.kdeconnect = {
-    package = 
-      pkgs.kdePackages.kdeconnect-kde
-    ;
-    enable = true;
-    indicator = true;
-  };
-  
   # OBS for screen recording
   programs.obs-studio = {
     enable = true;
@@ -311,10 +302,8 @@ in
   # User-specific packages
   home.packages = with pkgs; [
     adw-gtk3
-    android-tools
     ani-cli
     asciiquarium-transparent
-    blueman
     brightnessctl
     cava
     cbonsai
@@ -340,14 +329,12 @@ in
     ideaUltimateWrapped
     dataGripWrapped
     jq
-    kdePackages.kamera
     libreoffice
     mediainfo
     nautilus
     nitch
     nwg-look
-    # Temporary pin: current Obsidian from updated nixpkgs regressed after the 2026-06-06 system update.
-    pkgs-obsidian-old.obsidian
+    obsidian
     pamixer
     pavucontrol
     python3

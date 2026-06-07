@@ -32,15 +32,15 @@ stdenv.mkDerivation rec {
     libpng
     zlib
     avahi
-    xorg.libX11
-    xorg.libXtst
-    xorg.libXcomposite
-    xorg.libXdamage
-    xorg.libXrandr
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libXrender
-    xorg.libXi
+    libx11
+    libxtst
+    libxcomposite
+    libxdamage
+    libxrandr
+    libxext
+    libxfixes
+    libxrender
+    libxi
   ];
 
   unpackPhase = "dpkg-deb -x $src .";

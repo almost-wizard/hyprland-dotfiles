@@ -1,2 +1,0 @@
-# Load the Nix-built hyprexpo plugin before its config and binds are parsed.
-# plugin = /nix/store/4l10q7g18czlp44y9ld7mjvmnsxvcn4f-hyprexpo-0.52.0/lib/libhyprexpo.so
