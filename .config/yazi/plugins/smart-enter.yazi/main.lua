@@ -3,7 +3,14 @@
 return {
 	entry = function()
 		local h = cx.active.current.hovered
+		if not h then
+			return
+		end
 
-		ya.manager_emit(h and h.cha.is_dir and "enter" or "open", { hovered = true })
+		if h.cha.is_dir then
+			ya.emit("enter", {})
+		else
+			ya.emit("open", { hovered = true })
+		end
 	end,
 }

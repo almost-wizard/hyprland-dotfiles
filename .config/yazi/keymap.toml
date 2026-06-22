@@ -24,12 +24,19 @@ desc = "Run one fish command, then return to Yazi"
 
 # Open an interactive fish shell in the current directory.
 [[mgr.prepend_keymap]]
-on = ["z", "!"]
+on = ["Z"]
 run = "shell --block \"exec fish\""
 desc = "Open fish here (full shell)"
 
 # Send selected files to dragon-drop.
 [[mgr.prepend_keymap]]
 on  = ["<C-n>"]
-run = 'shell "dragon-drop -x -A -T $@"'
+run = 'shell --orphan -- dragon-drop -x -A -T "$@"'
 desc = "Drag and drop"
+
+# Compress selected files to a zip archive.
+[[mgr.prepend_keymap]]
+on  = ["z"]
+run = 'shell --block -- fish $HOME/.config/yazi/scripts/zip_files.fish "$@"'
+desc = "Compress to zip archive"
+

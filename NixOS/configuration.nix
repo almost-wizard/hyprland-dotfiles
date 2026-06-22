@@ -100,8 +100,11 @@ in
 
   # Power profiles
   services.logind.settings.Login = {
-    HandleLidSwitch = "hibernate";
-    HandleLidSwitchExternalPower = "hibernate";
+    HandleLidSwitch = "suspend-then-hibernate";
+    HandleLidSwitchExternalPower = "suspend-then-hibernate";
+  };
+  systemd.sleep.settings.Sleep = {
+    HibernateDelaySec = "30min";
   };
 
   # Use power-profiles-daemon for explicit manual profile switching.
@@ -309,6 +312,9 @@ in
 
   # System-wide settings
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [
+    inputs.antigravity-nix.overlays.default
+  ];
   programs.nix-ld.enable = true;
   zramSwap.enable = true;
 
@@ -325,7 +331,6 @@ in
 
   # Services
   programs.ssh.startAgent = true;
-  programs.adb.enable = true;
 
   programs.java = {
     enable = true;
@@ -442,6 +447,7 @@ in
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
       inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
+      android-tools
       aseprite
       bluetui
       font-awesome
@@ -452,6 +458,8 @@ in
       gnome-themes-extra
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
+      google-antigravity-no-fhs
+      google-antigravity-cli
       age
       bat
       bluez

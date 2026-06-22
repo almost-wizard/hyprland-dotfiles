@@ -15,6 +15,11 @@
       url = "github:InioX/Matugen?ref=refs/tags/v3.1.0";
     };
 
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     hyprland.url = "github:hyprwm/Hyprland";
     
     hyprspace = {
@@ -29,6 +34,7 @@
       nixpkgs,
       home-manager,
       nixpkgs-unstable,
+      antigravity-nix,
       hyprland,
       hyprspace,
       ...
