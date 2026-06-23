@@ -3,7 +3,7 @@
 set -euo pipefail
 
 LOW_HZ="${LOW_HZ:-60}"
-HIGH_HZ="${HIGH_HZ:-144}"
+HIGH_HZ="${HIGH_HZ:-90}"
 
 # Function to get the current monitor name
 get_monitor() {
@@ -42,9 +42,9 @@ set_refresh() {
     local res current_rate pos scale
     read -r res current_rate pos scale < <(get_monitor_state "$monitor")
 
-    res="${res:-1920x1080}"
+    res="${res:-2520x1680}"
     pos="${pos:-0x0}"
-    scale="${scale:-1}"
+    scale="${scale:-1.5}"
 
     hyprctl keyword monitor "$monitor,${res}@${rate},${pos},${scale}" >/dev/null
 }

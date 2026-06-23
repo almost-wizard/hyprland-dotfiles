@@ -6,20 +6,20 @@ export LC_ALL LANG
 
 back_label="← Back"
 
-	chosen=$(
-		printf "%s\n" \
-			"$back_label" \
-			"Beam" |
-			rofi -dmenu -i -selected-row 1 -config "$HOME/.config/RofiScripts/Waybars/WB.rasi" -kb-move-char-back "" -kb-move-char-forward "" -kb-custom-1 "Left" -kb-accept-entry "Control+j,Control+m,Return,KP_Enter,Right"
-	)
+		chosen=$(
+			printf "%s\n" \
+				"$back_label" \
+				"Main Bar" |
+				rofi -dmenu -i -selected-row 1 -config "$HOME/.config/RofiScripts/Waybars/WB.rasi" -kb-move-char-back "" -kb-move-char-forward "" -kb-custom-1 "Left" -kb-accept-entry "Control+j,Control+m,Return,KP_Enter,Right"
+		)
 	rc=$?
 
 if [ "$rc" -eq 10 ] || [ "$chosen" = "$back_label" ]; then
-	~/.config/RofiScripts/Launcher/Launcher.sh
+	~/.config/RofiScripts/Launcher/Appearance.sh
 	exit 0
 fi
 
 case "$chosen" in
-   "Beam") ~/.config/RofiScripts/Waybars/WaybarThemes/bar/bar.sh & ~/.config/RofiScripts/Waybars/WaybarThemes/bar/launch.sh ;;
-   *) exit 1 ;;
+	   "Main Bar") ~/.config/RofiScripts/Waybars/WaybarThemes/bar/bar.sh ;;
+	   *) exit 1 ;;
 esac

@@ -17,9 +17,9 @@ fi
 
 open_launcher() {
 	if command -v hyprctl >/dev/null 2>&1; then
-		hyprctl dispatch exec "$HOME/.config/RofiScripts/Launcher/Launcher.sh" >/dev/null 2>&1
+		hyprctl dispatch exec "$HOME/.config/RofiScripts/Launcher/Capture.sh" >/dev/null 2>&1
 	else
-		setsid -f "$HOME/.config/RofiScripts/Launcher/Launcher.sh" >/dev/null 2>&1
+		setsid -f "$HOME/.config/RofiScripts/Launcher/Capture.sh" >/dev/null 2>&1
 	fi
 }
 

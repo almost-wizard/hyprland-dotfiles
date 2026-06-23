@@ -26,7 +26,6 @@
     "fit-to-screen": true,
     "widgets": [
       "mpris",
-      "buttons-grid",
       "title",
       "dnd",
       "notifications"
@@ -55,43 +54,6 @@
      "empty-list-label": "No audio sources available",
      "animation-type": "slide_down",
      "animation-duration": 500
-    },
-    "buttons-grid": {
-     "buttons-per-row": 5
-    },
-    "buttons-grid": {
-   "actions" : [
-        {
-          "active": false,
-          "command": "setsid ~/.config/swaync/scripts/changetheme.sh && setsid ~/.config/nwg-dock-hyprland/launch.sh",
-          "label": "",
-          "type": "button"
-        },
-        {
-          "active":false,
-          "command":"setsid ~/.config/RofiScripts/WallpaperChanger/wallrandom.sh",
-          "label":"󰥶",
-          "type": "button"
-        },
-        {
-          "active":false,
-          "command":"swaync-client -t && hyprshot -m region -o ~/Pictures/Screenshots/ | wl-copy",
-          "label":"󰄀",
-          "type": "button"
-        },
-	{
-          "active": false,
-          "command": "swaync-client -t && hyprlock",
-          "label": "󰌾",
-          "type": "button"
-        }, 
-        {
-          "active": false,
-          "command": "swaync-client -t && setsid ~/.config/RofiScripts/powermenu/powermenu.sh",
-          "label": "",
-          "type": "toggle"
-        }
-    ]
     }
     }
 }

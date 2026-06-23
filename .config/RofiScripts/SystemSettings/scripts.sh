@@ -17,13 +17,13 @@ back_label="← Back"
 	rc=$?
 
 if [ "$rc" -eq 10 ] || [ "$chosen" = "$back_label" ]; then
-	~/.config/RofiScripts/SystemSettings/hyprland.sh
+	~/.config/RofiScripts/Launcher/System.sh
 	exit 0
 fi
 
 case "$chosen" in
-	"󰃠 Brightness") codium ~/.config/hypr/scripts/brightness_control.sh ;;
-	"󰥔 Idle Timers") codium ~/.config/hypr/hypridle.conf ;;
-	"󰕾 Sound") codium ~/.config/hypr/scripts/volume_control.sh ;;
+	"󰃠 Brightness") code ~/.config/hypr/scripts/brightness_control.sh ;;
+	"󰥔 Idle Timers") code ~/.config/hypr/hypridle.conf ;;
+	"󰕾 Sound") code ~/.config/hypr/scripts/volume_control.sh ;;
 	*) exit 1 ;;
 esac

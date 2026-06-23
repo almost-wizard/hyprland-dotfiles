@@ -1,1 +1,0 @@
-/home/landilf/.config/RofiScripts/Waybars/WaybarThemes/bar/launch.sh

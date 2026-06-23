@@ -2,7 +2,7 @@
 @import "~/.config/colors/rofiradius.rasi"
 
 window {
-  width: 48em;
+  width: 42em;
   padding: 0em;
   border: 0px;         
   border-color: var(primary);

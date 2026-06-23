@@ -17,13 +17,13 @@ back_label="← Back"
 	rc=$?
 
 if [ "$rc" -eq 10 ] || [ "$chosen" = "$back_label" ]; then
-	~/.config/RofiScripts/SystemSettings/system.sh
+	~/.config/RofiScripts/Launcher/System.sh
 	exit 0
 fi
 
 case "$chosen" in
-   " Configuration") codium ~/Hyprland-Dotfiles/NixOS/configuration.nix ;;
-   "󰋜 Home Manager") codium ~/Hyprland-Dotfiles/NixOS/home.nix ;;
-   " Flake") codium ~/Hyprland-Dotfiles/NixOS/flake.nix ;;
+   " Configuration") code ~/hyprland-dotfiles/NixOS/configuration.nix ;;
+   "󰋜 Home Manager") code ~/hyprland-dotfiles/NixOS/home.nix ;;
+   " Flake") code ~/hyprland-dotfiles/NixOS/flake.nix ;;
    *) exit 1 ;;
 esac

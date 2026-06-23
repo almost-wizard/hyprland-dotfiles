@@ -16,7 +16,7 @@ back_label="← Back"
 	rc=$?
 
 if [ "$rc" -eq 10 ] || [ "$chosen" = "$back_label" ]; then
-	~/.config/RofiScripts/Launcher/Launcher.sh
+	~/.config/RofiScripts/Launcher/Appearance.sh
 	exit 0
 fi
 

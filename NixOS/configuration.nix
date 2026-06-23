@@ -1,6 +1,8 @@
-{ config, pkgs, inputs, pkgs-unstable, system, lib, ... }:
+{ config, pkgs, inputs, pkgs-unstable, lib, ... }:
 
 let
+  desktopUser = builtins.head (builtins.attrNames config.home-manager.users);
+
   sddmAstronautHyprlandKathTheme = pkgs.stdenvNoCC.mkDerivation {
     pname = "sddm-astronaut-theme-hyprland-kath";
     version = "1";
@@ -12,73 +14,235 @@ let
       mv "$out/share/sddm/themes/sddm-astronaut-theme" "$out/share/sddm/themes/sddm-astronaut-theme-hyprland-kath"
       chmod -R u+w "$out/share/sddm/themes/sddm-astronaut-theme-hyprland-kath"
       substituteInPlace "$out/share/sddm/themes/sddm-astronaut-theme-hyprland-kath/metadata.desktop" \
-        --replace "ConfigFile=Themes/astronaut.conf" "ConfigFile=Themes/hyprland_kath.conf"
+        --replace "ConfigFile=Themes/astronaut.conf" "ConfigFile=Themes/black_hole.conf"
     '';
   };
 in
 {
-
   imports = [
     ./hardware-configuration.nix
   ];
 
   # Bootloader
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 5;
-  boot.loader.timeout = 0;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  # Use latest kernel
+  boot.loader = {
+    efi.canTouchEfiVariables = false;
+    efi.efiSysMountPoint = "/boot/efi";
+    timeout = 0;
+    systemd-boot = {
+      enable = true;
+      configurationLimit = 5;
+      graceful = true;
+    };
+  };
   boot.kernelPackages = pkgs.linuxPackages;
-
-  # Time Settings
-  time.hardwareClockInLocalTime = false;
-
-  # Boot customization
+  boot.initrd.availableKernelModules = [
+    "xhci_pci"
+    "thunderbolt"
+    "nvme"
+    "usb_storage"
+    "sd_mod"
+  ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [
+    "kvm-intel"
+    "uinput"
+    "xpad"
+  ];
+  boot.extraModulePackages = [ ];
+  boot.resumeDevice = "/dev/disk/by-uuid/c95c8d22-0de2-4e0d-a8f4-d0951c736c83";
   boot.plymouth = {
     enable = true;
-    themePackages = [ pkgs.adi1090x-plymouth-themes ];
-    theme = "lone";
+    # themePackages = [ pkgs.adi1090x-plymouth-themes ];
+    # theme = "connect";
+    theme = "bgrt";
   };
-
-  boot.kernelParams = [ "quiet" "splash" "boot.shell_on_fail" "loglevel=3" "rd.systemd.show_status=false" "rd.udev.log_level=0" "udev.log_priority=0" "resume=UUID=c0428711-04a3-4adf-998d-d88af1d26e71" ];
-  boot.resumeDevice = "/dev/disk/by-uuid/c0428711-04a3-4adf-998d-d88af1d26e71";
+  boot.kernelParams = [
+    "quiet"
+    "splash"
+    "boot.shell_on_fail"
+    "loglevel=3"
+    "rd.systemd.show_status=false"
+    "rd.udev.log_level=0"
+    "udev.log_priority=0"
+  ];
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;
-  boot.initrd.kernelModules = [ "amdgpu" ];
 
   # Networking
-  networking.hostName = "nix-btw";
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
   networking.firewall.enable = true;
-  networking.firewall.trustedInterfaces = [ "docker0" "winapps0" ];
+  boot.kernel.sysctl = {
+    "fs.inotify.max_user_watches" = 1048576;
+    "fs.inotify.max_user_instances" = 1024;
+  };
+  networking.firewall.trustedInterfaces = [ "docker0" "zt+" ];
 
-  # Hibernation when closing the laptop lid
-  services.logind.settings.Login = {
-    HandleLidSwitch = "hibernate";
-    HandleLidSwitchExternalPower = "hibernate";
+  services.resolved.enable = true;
+  services.netbird.enable = true;
+  services.zerotierone.enable = true;
+
+  systemd.services.amnezia-vpn = {
+    description = "AmneziaVPN Background Service";
+    after = [ "network.target" "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs-unstable.amnezia-vpn}/bin/AmneziaVPN-service";
+      Restart = "always";
+      RestartSec = 5;
+      User = "root";
+      Group = "root";
+    };
   };
 
   # Power profiles
-  services.tlp = {
-    enable = true;
-    settings = {
-      CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend-then-hibernate";
+    HandleLidSwitchExternalPower = "suspend-then-hibernate";
+  };
+  systemd.sleep.settings.Sleep = {
+    HibernateDelaySec = "30min";
+  };
 
-      CPU_ENERGY_PERF_POLICY_ON_AC = "balance_performance";
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+  # Use power-profiles-daemon for explicit manual profile switching.
+  # TLP conflicts with this workflow by reapplying AC/BAT policies.
+  services.tlp.enable = false;
+  services.power-profiles-daemon.enable = true;
+  services.thermald.enable = true;
+  # MateBook firmware exposes incomplete adaptive thermal zones for thermald.
+  # Run thermald in non-adaptive mode to avoid service startup failure.
+  systemd.services.thermald.serviceConfig.ExecStart = lib.mkForce
+    "${pkgs.thermald}/sbin/thermald --no-daemon --dbus-enable";
 
-      CPU_BOOST_ON_AC = 1;
-      CPU_BOOST_ON_BAT = 0;
+  # systemd.services.auto-power-profile-on-battery = {
+  #   description = "Auto switch power profile to balanced on battery";
+  #   wantedBy = [ "multi-user.target" ];
+  #   after = [ "power-profiles-daemon.service" ];
+  #   wants = [ "power-profiles-daemon.service" ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #   };
+  #   script = ''
+  #     mains_online=0
+  #     for ps in /sys/class/power_supply/*; do
+  #       if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
+  #         if [ "$(cat "$ps/online")" = "1" ]; then
+  #           mains_online=1
+  #           break
+  #         fi
+  #       fi
+  #     done
+  #
+  #     if [ "$mains_online" = "0" ]; then
+  #       ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced || true
+  #     else
+  #       ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance || true
+  #     fi
+  #
+  #     # Signal waybar to update the power mode icon
+  #     ${pkgs.procps}/bin/pkill -SIGRTMIN+11 -u ${desktopUser} waybar || true
+  #   '';
+  # };
 
-      CPU_MAX_PERF_ON_AC = 100;
-      CPU_MAX_PERF_ON_BAT = 70;
-
-      RUNTIME_PM_ON_AC = "on";
-      RUNTIME_PM_ON_BAT = "auto";
+  systemd.services.low-battery-monitor = {
+    description = "Notify on low battery and hibernate before power loss";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-logind.service" ];
+    serviceConfig = {
+      Type = "simple";
+      Restart = "always";
+      RestartSec = 10;
     };
+    script = ''
+      # Constants
+      USER_NAME=${lib.escapeShellArg desktopUser}
+      USER_UID=$(${pkgs.coreutils}/bin/id -u "$USER_NAME")
+      POLL_INTERVAL_SECONDS=60
+      FIRST_WARNING_PERCENT=15
+      CRITICAL_WARNING_PERCENT=5
+      HIBERNATE_PERCENT=2
+      HIBERNATE_DELAY_SECONDS=5
+      STATE_FILE=/run/low-battery-monitor.state
+
+      notify_user() {
+        urgency=$1
+        summary=$2
+        body=$3
+        runtime_dir="/run/user/$USER_UID"
+        bus="unix:path=$runtime_dir/bus"
+
+        if [ -S "$runtime_dir/bus" ]; then
+          ${pkgs.util-linux}/bin/runuser -u "$USER_NAME" -- \
+            env XDG_RUNTIME_DIR="$runtime_dir" DBUS_SESSION_BUS_ADDRESS="$bus" \
+            ${pkgs.libnotify}/bin/notify-send -u "$urgency" "$summary" "$body" || true
+        fi
+      }
+
+      while true; do
+        mains_online=0
+        battery_capacity=
+        battery_status=
+
+        for ps in /sys/class/power_supply/*; do
+          [ -e "$ps" ] || continue
+
+          if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
+            if [ "$(cat "$ps/online")" = "1" ]; then
+              mains_online=1
+            fi
+          fi
+
+          if [ -f "$ps/type" ] && [ -f "$ps/capacity" ] && [ "$(cat "$ps/type")" = "Battery" ]; then
+            status=Unknown
+            [ -f "$ps/status" ] && status=$(cat "$ps/status")
+
+            if [ -z "$battery_capacity" ] || [ "$status" = "Discharging" ]; then
+              battery_capacity=$(cat "$ps/capacity")
+              battery_status=$status
+            fi
+          fi
+        done
+
+        if [ -z "$battery_capacity" ]; then
+          sleep "$POLL_INTERVAL_SECONDS"
+          continue
+        fi
+
+        case "$battery_capacity" in
+          ""|*[!0-9]*)
+            sleep "$POLL_INTERVAL_SECONDS"
+            continue
+            ;;
+        esac
+
+        if [ "$mains_online" = "1" ] || [ "$battery_status" != "Discharging" ]; then
+          printf '%s\n' reset > "$STATE_FILE"
+          sleep "$POLL_INTERVAL_SECONDS"
+          continue
+        fi
+
+        last_state=
+        [ -r "$STATE_FILE" ] && last_state=$(cat "$STATE_FILE")
+
+        if [ "$battery_capacity" -le "$HIBERNATE_PERCENT" ]; then
+          notify_user critical "Battery critical" "Battery is at $battery_capacity%. Hibernating now."
+          printf '%s\n' hibernate > "$STATE_FILE"
+          sleep "$HIBERNATE_DELAY_SECONDS"
+          ${pkgs.systemd}/bin/systemctl hibernate
+        elif [ "$battery_capacity" -le "$CRITICAL_WARNING_PERCENT" ] && [ "$last_state" != "$CRITICAL_WARNING_PERCENT" ]; then
+          notify_user critical "Battery low" "Battery is at $battery_capacity%. Hibernation starts at $HIBERNATE_PERCENT%."
+          printf '%s\n' "$CRITICAL_WARNING_PERCENT" > "$STATE_FILE"
+        elif [ "$battery_capacity" -le "$FIRST_WARNING_PERCENT" ] && [ "$last_state" != "$FIRST_WARNING_PERCENT" ] && [ "$last_state" != "$CRITICAL_WARNING_PERCENT" ]; then
+          notify_user normal "Battery low" "Battery is at $battery_capacity%. Plug in the charger."
+          printf '%s\n' "$FIRST_WARNING_PERCENT" > "$STATE_FILE"
+        fi
+
+        sleep "$POLL_INTERVAL_SECONDS"
+      done
+    '';
   };
 
   # Throne Settings
@@ -89,19 +253,31 @@ in
     capabilities = "cap_net_admin+ep";
   };
 
+  # Throne talks to systemd-resolved for per-link DNS and routing changes.
+  # Allow the full resolve1 action namespace for alex to avoid repeated
+  # polkit prompts on connect/disconnect and profile stop.
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (
+        subject.user == "${desktopUser}" &&
+        action.id.indexOf("org.freedesktop.resolve1.") === 0
+      ) {
+        return polkit.Result.YES;
+      }
+    });
+  '';
+
   # RPCS3 memory lock fix
   security.pam.loginLimits = [
     { domain = "@users"; type = "soft"; item = "memlock"; value = "unlimited"; }
     { domain = "@users"; type = "hard"; item = "memlock"; value = "unlimited"; }
   ];
-  
-  # KDE Connect Configuration
-  programs.kdeconnect.package = pkgs.kdePackages.kdeconnect-kde;
-  programs.kdeconnect.enable = true;
 
   # Localization
   time.timeZone = "Europe/Moscow";
-  i18n.defaultLocale = "ru_RU.UTF-8";
+  time.hardwareClockInLocalTime = false;
+  services.timesyncd.enable = true;
+  i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ru_RU.UTF-8";
     LC_IDENTIFICATION = "ru_RU.UTF-8";
@@ -114,44 +290,48 @@ in
     LC_TIME = "ru_RU.UTF-8";
   };
 
-  # Keyboard
   services.xserver.xkb = {
     layout = "us,ru";
     variant = "";
   };
   console.keyMap = "us";
 
+  environment.localBinInPath = true;
+
   # User account
-  users.users.landilf = {
+  users.users.${desktopUser} = {
     isNormalUser = true;
-    description = "Landilf";
+    description = "Alexander";
     extraGroups = [ "networkmanager" "wheel" "docker" "video" "input" "kvm" "adbusers" ];
     shell = pkgs.fish;
   };
 
-  # SwayOSD udev rules
-  services.udev.packages = [ pkgs.swayosd ];
-
-  # Home Manager
   home-manager.useUserPackages = true;
   home-manager.useGlobalPkgs = true;
   home-manager.backupFileExtension = "backup";
 
   # System-wide settings
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [
+    inputs.antigravity-nix.overlays.default
+  ];
+  programs.nix-ld.enable = true;
   zramSwap.enable = true;
 
   # Desktop Environment
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    package = inputs.hyprland.packages.${pkgs.system}.hyprland;
+    withUWSM = true;
+  };
   programs.dconf.enable = true;
-  
-  # Shell (required for user shell)
   programs.fish.enable = true;
+  qt.enable = true;
+  qt.platformTheme = "qt5ct";
 
-  # SSH configuration
+  # Services
   programs.ssh.startAgent = true;
 
-  # Java configuration
   programs.java = {
     enable = true;
     package = pkgs.jdk21;
@@ -165,7 +345,7 @@ in
       "iptables" = true;
     };
   };
-  
+
   # Gaming
   programs.steam = {
     enable = true;
@@ -173,59 +353,32 @@ in
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
   };
+
   programs.gamescope = {
     enable = true;
     package = pkgs.gamescope;
   };
 
-  # Flatpak
-  services.flatpak.enable = false;
+  # Printing
+  services.printing.enable = true;
 
   # Hardware
   hardware.bluetooth.enable = true;
-  hardware.cpu.amd.updateMicrocode = true;
-  hardware.enableAllFirmware = true;
+  hardware.enableRedistributableFirmware = true;
+  hardware.xpadneo.enable = true;
+  hardware.opentabletdriver.enable = false;
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
-      nvidia-vaapi-driver
-      libva-vdpau-driver
-      libvdpau-va-gl
+      intel-vaapi-driver
+      intel-media-driver
     ];
   };
-  hardware.opentabletdriver = {
-    enable = false;
-  };
-
-  # NVIDIA + AMD Prime
-  services.xserver.videoDrivers = [ "amdgpu" "nvidia" ];
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = true;
-    powerManagement.finegrained = true;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.production;
-
-    prime = {
-      offload = {
-        enable = true;
-        enableOffloadCmd = true;
-      };
-      nvidiaBusId = "PCI:1:0:0";
-      amdgpuBusId = "PCI:54:0:0";
-    };
-  };
-
-  # OpenRGB
-  services.hardware.openrgb = {
-    enable = true;
-    motherboard = "amd";
-  };
-  systemd.services.openrgb.wantedBy = lib.mkForce [];
 
   # Audio
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     wireplumber.enable = true;
@@ -239,95 +392,179 @@ in
     enable = true;
     theme = "sddm-astronaut-theme-hyprland-kath";
     wayland.enable = true;
-    extraPackages = with pkgs; [ 
+    settings = {
+      General = {
+        GreeterEnvironment = "QT_SCALE_FACTOR=1.2,QT_SCREEN_SCALE_FACTORS=1.2,QT_SCALE_FACTOR_ROUNDING_POLICY=PassThrough";
+      };
+    };
+    extraPackages = with pkgs; [
       kdePackages.qtmultimedia
       kdePackages.qtsvg
       kdePackages.qtvirtualkeyboard
       kdePackages.qtbase
-    ]; 
+    ];
   };
 
   # XDG Portal
   xdg.portal = {
     enable = true;
+    xdgOpenUsePortal = false;
     extraPortals = with pkgs; [
-      xdg-desktop-portal-hyprland
+      xdg-desktop-portal-gtk
       xdg-desktop-portal-gtk
     ];
+    config = {
+      common = {
+        default = [ "hyprland" "gtk" ];
+      };
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+      };
+    };
   };
-  
-  # GVFS for trash support in file managers
+
   services.gvfs.enable = true;
 
+  # SwayOSD and game controller udev rules
+  services.udev.packages = with pkgs; [
+    game-devices-udev-rules
+    steam-devices-udev-rules
+    swayosd
+  ];
+
   # System packages (only system-level stuff)
-  environment.systemPackages = 
+  environment.systemPackages =
     (with pkgs-unstable; [
+      amnezia-vpn
+      amneziawg-tools
       codex
-      easyeffects
+      gemini-cli
       throne
       yandex-music
     ])
+    ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
     ++ (with pkgs; [
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
       inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
-      bluez
-      bubblewrap
-      docker
-      docker-compose
-      drawio
-      flameshot
+      android-tools
+      aseprite
+      bluetui
       font-awesome
-      freerdp
-      fzf
-      gnome-themes-extra
-      kdePackages.kstatusnotifieritem
-      kdePackages.qt6ct
       killall
-      lazydocker
-      lazygit
       libnotify
       libqalculate
+      mission-center
+      gnome-themes-extra
+      sddm-astronaut
+      sddmAstronautHyprlandKathTheme
+      google-antigravity-no-fhs
+      google-antigravity-cli
+      age
+      bat
+      bluez
+      btop
+      bubblewrap
+      cloc
+      cmake
+      curl
+      discord
+      docker
+      docker-compose
+      dragon-drop
+      duf
+      ffmpeg
+      freerdp
+      fzf
+      gcc
+      gdb
+      gimp3
+      gnumake
+      htop
+      jq
+      kdePackages.qt6ct
+      lazydocker
+      lazygit
       libsForQt5.qt5ct
       mangohud
-      mission-center
+      evtest
+      gamepad-tool
+      maven
+      micro
       neo
-      nix-search-tv
-      openrgb-with-all-plugins
+      netbird-ui
+      ninja
+      nixfmt
+      ntfs3g
+      openai-whisper
+      ollama
+      llama-cpp
       p7zip
+      haskellPackages.pdftotext
+      playerctl
+      postman
       powertop
       ppsspp-sdl-wayland
       protonplus
+      python3
+      python3Packages.pip
+      python3Packages.tkinter
+      python3Packages.virtualenv
+      qgis
+      rar
       rpcs3
+      ruff
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
       scanmem
+      scrcpy
+      stdenv
+      steam
       tenacity
+      tex-fmt
+      texliveFull
+      tree
+      tmux
+      unzip
+      unrar
+      valgrind
       vim
+      vscode
+      wget
       winetricks
-      xrandr
+      xclip
+      xsel
+      yt-dlp
+      zip
     ]);
 
+  # Compatibility
   # Codex CLI expects a system bubblewrap at /usr/bin/bwrap.
   systemd.tmpfiles.rules = [
     "L+ /usr/bin/bwrap - - - - ${pkgs.bubblewrap}/bin/bwrap"
   ];
 
   # Fonts
-  fonts.packages = with pkgs; [ 
-    noto-fonts
-    adwaita-fonts
-    nerd-fonts.jetbrains-mono 
-    noto-fonts-cjk-sans
-  ];
-  
-  # Udev Settings
+  fonts.packages =
+    (builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts))
+    ++ [
+      pkgs.adwaita-fonts
+      pkgs.noto-fonts
+      pkgs.noto-fonts-cjk-sans
+      pkgs.noto-fonts-color-emoji
+    ];
 
-  # Teevolution Terra
- services.udev.extraRules = ''
+  # Udev Settings
+  services.udev.extraRules = ''
+    # Steam Input / controller remapping needs access to uinput.
+    KERNEL=="uinput", MODE="0660", GROUP="input", OPTIONS+="static_node=uinput", TAG+="uaccess"
+
+    # Trigger auto power-profile switch service on AC plug/unplug events
+    # SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_TYPE}=="Mains", TAG+="systemd", ENV{SYSTEMD_WANTS}+="auto-power-profile-on-battery.service"
+
     # Teevolution Terra
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f523", MODE="0666", TAG+="uaccess"
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f522", MODE="0666", TAG+="uaccess" 
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f522", MODE="0666", TAG+="uaccess"
 
     # Wooting One Legacy
     SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff01", MODE="0666", TAG+="uaccess"
@@ -348,16 +585,15 @@ in
     SUBSYSTEM=="usb", ATTRS{idVendor}=="31e3", MODE="0666", TAG+="uaccess"
   '';
 
-  # Nix optimization
+  # Nix
   nix.gc = {
     automatic = true;
     dates = "weekly";
-    options = "--delete-older-than 7d";
+    options = "--delete-older-than 14d";
   };
 
-  # Nix settings
   nix.settings.auto-optimise-store = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.05";
 }

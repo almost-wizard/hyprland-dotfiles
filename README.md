@@ -1,4 +1,4 @@
-# Hyprland-Dotfiles (NixOS)
+# hyprland-dotfiles (NixOS)
 
 <p align="center"><img width="2560" height="1440" alt="2026-01-02-014611_hyprshot" src="https://github.com/user-attachments/assets/401bc502-230c-4e68-9ad6-5cd44aac5bf5" /></p>
 <p align="center"><img width="2560" height="1440" alt="2026-01-02-014935_hyprshot" src="https://github.com/user-attachments/assets/ccecc424-15fa-43fc-97eb-fbfcc71d0b5d" /></p>
@@ -9,25 +9,25 @@ Welcome to my Hyprland Dotfiles!
 ## Disclaimer
 
 Some knowledge of NixOS is a prerequisite.  
-You will need to edit the files within `~/Hyprland-Dotfiles/NixOS` to fit your needs and your machine.  
+You will need to edit the files within `~/hyprland-dotfiles/NixOS` to fit your needs and your machine.  
 
 For example, I use NVIDIA drivers, which you may not need. Keep that in mind!
 
 ## How to Install
 
 - Clone this repo into your home directory
-- copy `/etc/nixos/hardware-configuration.nix` from your machine into `~/Hyprland-Dotfiles/NixOS/`
-- Build NixOS using my flake. Change your machine's hostname to `nix-btw` or change the hostname within `~/Hyprland-Dotfiles/NixOS` to match your machine.  
+- copy `/etc/nixos/hardware-configuration.nix` from your machine into `~/hyprland-dotfiles/NixOS/`
+- Build NixOS using my flake. Keep hostname as `nixos` or change it in `~/hyprland-dotfiles/NixOS/flake.nix`.  
 
-  Example command (only if your hostname is `nix-btw`):
+  Example command:
 
   ```bash
-  sudo nixos-rebuild switch ~/Hyprland-Dotfiles#nix-btw
+  sudo nixos-rebuild switch ~/hyprland-dotfiles/NixOS#nixos
   ```
 
   Post-install, this will be aliased to `nrs`. If you change the hostname, you'll also need to change the aliases.
 
-- Navigate into `~/Hyprland-Dotfiles` if not already there and run:
+- Navigate into `~/hyprland-dotfiles` if not already there and run:
 
   ```bash
   stow .
@@ -56,8 +56,8 @@ For example, I use NVIDIA drivers, which you may not need. Keep that in mind!
 
 ## How to Change the Language
 
-- Edit the Rofi scripts in `~/Hyprland-Dotfiles/RofiScripts` and change everything to your desired language
-- Edit `~/Hyprland-Dotfiles/NixOS/configuration.nix` and change the locale to your desired setting
+- Edit the Rofi scripts in `~/hyprland-dotfiles/RofiScripts` and change everything to your desired language
+- Edit `~/hyprland-dotfiles/NixOS/configuration.nix` and change the locale to your desired setting
 
 ## Important packages that I use for my rice
 
@@ -84,4 +84,3 @@ For example, I use NVIDIA drivers, which you may not need. Keep that in mind!
 **Notification center**
 - swaync
 - libnotify (necessary on NixOS)
-

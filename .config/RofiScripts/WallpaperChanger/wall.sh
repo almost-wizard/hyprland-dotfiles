@@ -1,1 +1,1 @@
-/home/landilf/.config/RofiScripts/Walls/wall.sh
+/home/alex/.config/RofiScripts/Walls-light/wall.sh

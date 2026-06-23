@@ -1,0 +1,122 @@
+{
+    // Мои настройки 
+
+    // Шрифт для редактора
+    "editor.fontFamily": "'JetBrains Mono', monospace",
+    "editor.fontSize": 14,
+    "editor.fontWeight": "normal",
+
+    // Шрифт для остальных инструментов
+    "markdown.preview.fontFamily": "'JetBrains Mono', monospace",
+    "markdown.preview.fontSize": 14,
+    "notebook.output.fontFamily": "'JetBrains Mono', monospace",
+    "notebook.output.fontSize": 14,
+
+    // Тема
+    "workbench.iconTheme": "bearded-icons",
+    "workbench.tree.indent": 14,
+    "workbench.preferredLightColorTheme": "Bearded Theme feat. Melle Julie Light",
+    "material-icon-theme.hidesExplorerArrows": true,
+
+    // Махинации с файлами
+    "explorer.confirmDelete": true,
+    "explorer.confirmDragAndDrop": true,
+    "files.enableTrash": true,
+    "workbench.editor.closeOnFileDelete": true,
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "workbench.secondarySideBar.showLabels": false,
+    "workbench.activityBar.location": "default", // bottom
+    "workbench.layoutControl.enabled": false,
+    "workbench.navigationControl.enabled": false,
+    "workbench.sideBar.location": "right",
+    "window.menuBarVisibility": "toggle",
+    "chat.commandCenter.enabled": false,
+    "chat.agent.enabled": false,
+    
+    // Убираем лишние декорации
+    "editor.minimap.enabled": false,
+    "editor.overviewRulerBorder": false,
+    "editor.hideCursorInOverviewRuler": true,
+    "editor.stickyScroll.enabled": false,
+    "editor.lightbulb.enabled": "off",
+    "editor.guides.indentation": false,
+    "workbench.tree.renderIndentGuides": "none",
+
+    // Тема для открытых вкладок
+    "workbench.editor.showTabs": "single",
+
+    // Настройки курсора
+    "editor.cursorBlinking": "phase",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.multiCursorModifier": "ctrlCmd",
+
+    // Поведение vsc
+    "workbench.startupEditor": "none",
+    "workbench.tips.enabled": false,
+    "files.insertFinalNewline": true,
+    "files.autoSave": "afterDelay",
+    "update.mode": "none",
+    "extensions.ignoreRecommendations": true,
+
+    // Настройки отсутпов
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+
+    // Плагины
+    "todohighlight.isEnable": true,
+
+    // Игнорируемые файлы в дереве
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.cache": true,
+        // "**/build": true
+    },
+
+    "notebook.lineNumbers": "on",
+    "notebook.formatOnSave.enabled": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+    },
+
+    // LaTeX Workshop
+    "latex-workshop.formatting.latex": "latexindent",
+    "latex-workshop.latex.outDir": "%DIR%/out",
+
+    
+    // Автогенерированные настройки
+    "cmake.configureOnOpen": true,
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "security.workspace.trust.untrustedFiles": "open",
+    "cmake.pinnedCommands": [
+        "workbench.action.tasks.configureTaskRunner",
+        "workbench.action.tasks.runTask"
+    ],
+    "cmake.showConfigureWithDebuggerNotification": false,
+    "cmake.options.statusBarVisibility": "icon",
+    "notebook.output.scrolling": true,
+    "remote.autoForwardPortsSource": "hybrid",
+    "window.autoDetectColorScheme": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "git.confirmSync": false,
+    "git.openRepositoryInParentFolders": "never",
+    "debug.onTaskErrors": "abort",
+    "jupyter.askForKernelRestart": false,
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
+    "clangd.detectExtensionConflicts": false,
+    "diffEditor.codeLens": true,
+    "latex-workshop.formatting.latexindent.args": [
+        "-c",
+        "%DIR%/",
+        "%TMPFILE%",
+        "-y=defaultIndent: '  '"
+    ],
+    "diffEditor.ignoreTrimWhitespace": false,
+}
