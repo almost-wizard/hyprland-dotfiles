@@ -9,8 +9,6 @@
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    prism-cracked.url = "github:Diegiwg/PrismLauncher-Cracked/main";
-
     matugen = {
       url = "github:InioX/Matugen?ref=refs/tags/v3.1.0";
     };
@@ -20,12 +18,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    hyprland.url = "github:hyprwm/Hyprland";
-    
-    hyprspace = {
-      url = "github:KZDKM/Hyprspace";
-      inputs.hyprland.follows = "hyprland";
-    };
+    # v0.55 switched the default configuration language from hyprlang (.conf)
+    # to Lua. Keep the last hyprlang release until the existing dotfiles have
+    # been migrated.
+    hyprland.url = "github:hyprwm/Hyprland/v0.54.3";
 
   };
 
@@ -36,7 +32,6 @@
       nixpkgs-unstable,
       antigravity-nix,
       hyprland,
-      hyprspace,
       ...
     }:
     let
@@ -50,7 +45,7 @@
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit inputs system hyprland hyprspace;
+          inherit inputs system hyprland;
           pkgs-unstable = unstablePkgs;
         };
 
@@ -60,7 +55,7 @@
           {
             networking.hostName = "nixos";
             home-manager.extraSpecialArgs = {
-              inherit hyprland hyprspace;
+              inherit hyprland;
               pkgs-unstable = unstablePkgs;
             };
             home-manager.users.alex = import ./home.nix;

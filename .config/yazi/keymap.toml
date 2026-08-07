@@ -17,16 +17,16 @@ run = "plugin toggle-pane max-preview"
 desc = "Maximize or restore the preview pane"
 
 # Run a single fish command and return to Yazi.
-[[mgr.prepend_keymap]]
-on = ["!"]
-run = "shell --block \"fish -ic 'read --shell --prompt-str=\\\"fish> \\\" cmd; and eval $cmd'\""
-desc = "Run one fish command, then return to Yazi"
+# [[mgr.prepend_keymap]]
+# on = ["!"]
+# run = "shell --block \"fish -ic 'read --shell --prompt-str=\\\"fish> \\\" cmd; and eval $cmd'\""
+# desc = "Run one fish command, then return to Yazi"
 
 # Open an interactive fish shell in the current directory.
 [[mgr.prepend_keymap]]
-on = ["Z"]
+on = ["!"]
 run = "shell --block \"exec fish\""
-desc = "Open fish here (full shell)"
+desc = "Open fish here"
 
 # Send selected files to dragon-drop.
 [[mgr.prepend_keymap]]
@@ -39,4 +39,3 @@ desc = "Drag and drop"
 on  = ["z"]
 run = 'shell --block -- fish $HOME/.config/yazi/scripts/zip_files.fish "$@"'
 desc = "Compress to zip archive"
-

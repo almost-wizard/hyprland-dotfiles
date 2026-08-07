@@ -1,65 +1,6 @@
-{ config, pkgs, pkgs-unstable, hyprland, hyprspace, ... }:
-
-let
-  ideaVersion = "2025.2.6.1";
-  ideaUltimatePinned = pkgs.jetbrains.idea.overrideAttrs (_old: {
-    version = ideaVersion;
-    src = pkgs.fetchurl {
-      url = "https://download.jetbrains.com/idea/ideaIU-${ideaVersion}.tar.gz";
-      hash = "sha256-TOix8nLmQn3nCYmk5BQFSGuXxO8urN3Zv70bv5EtP7I=";
-    };
-  });
-  ideaVmOptions = pkgs.writeText "idea64.vmoptions" ''
-    -javaagent:${config.home.homeDirectory}/appcache/jetbra/ja-netfilter.jar=jetbrains
-    --add-opens=java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED
-    --add-opens=java.base/jdk.internal.org.objectweb.asm.tree=ALL-UNNAMED
-  '';
-  ideaUltimateWrapped = ideaUltimatePinned.overrideAttrs (old: {
-    nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.makeWrapper ];
-    postFixup =
-      (old.postFixup or "")
-      + ''
-        if [ -x "$out/bin/idea-ultimate" ]; then
-          wrapProgram "$out/bin/idea-ultimate" --set IDEA_VM_OPTIONS "${ideaVmOptions}"
-        fi
-
-        if [ -x "$out/bin/idea" ]; then
-          wrapProgram "$out/bin/idea" --set IDEA_VM_OPTIONS "${ideaVmOptions}"
-        fi
-      '';
-  });
-
-  dataGripVersion = "2025.2.3";
-  dataGripPinned = pkgs.jetbrains.datagrip.overrideAttrs (_old: {
-    version = dataGripVersion;
-    src = pkgs.fetchurl {
-      url = "https://download.jetbrains.com/datagrip/datagrip-${dataGripVersion}.tar.gz";
-      hash = "sha256-fKxc4fwW7j51AKZ16/I14yhdbofA1h6DcOhH86SFKKc=";
-    };
-  });
-  dataGripVmOptions = pkgs.writeText "datagrip64.vmoptions" ''
-    -javaagent:${config.home.homeDirectory}/appcache/jetbra/ja-netfilter.jar=jetbrains
-    --add-opens=java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED
-    --add-opens=java.base/jdk.internal.org.objectweb.asm.tree=ALL-UNNAMED
-  '';
-  dataGripWrapped = dataGripPinned.overrideAttrs (old: {
-    nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.makeWrapper ];
-    postFixup =
-      (old.postFixup or "")
-      + ''
-        if [ -x "$out/bin/datagrip" ]; then
-          wrapProgram "$out/bin/datagrip" --set DATAGRIP_VM_OPTIONS "${dataGripVmOptions}"
-        fi
-
-        if [ -x "$out/bin/datagrip.sh" ]; then
-          wrapProgram "$out/bin/datagrip.sh" --set DATAGRIP_VM_OPTIONS "${dataGripVmOptions}"
-        fi
-      '';
-  });
-in
+{ config, pkgs, pkgs-unstable, hyprland, ... }:
 
 {
-
   imports = [
   ];
 
@@ -70,10 +11,6 @@ in
   # mimeApps
   xdg.mimeApps.enable = true;
   xdg.configFile."mimeapps.list".force = true;
-  xdg.configFile."hypr/hyprconfigs/hyprspace-load.conf".text = ''
-    # Load the Nix-built hyprspace plugin before its config and binds are parsed.
-    plugin = ${hyprspace.packages.${pkgs.system}.Hyprspace}/lib/libHyprspace.so
-  '';
 
   xdg.mimeApps.defaultApplications = {
 
@@ -239,19 +176,6 @@ in
   # SwayOSD service
   services.swayosd.enable = true;
 
-  # OBS for screen recording
-  programs.obs-studio = {
-    enable = true;
-    plugins = with pkgs.obs-studio-plugins; [
-      obs-pipewire-audio-capture
-      obs-gstreamer
-      obs-vkcapture
-    ];
-    package = pkgs.obs-studio.override {
-      cudaSupport = true; 
-    };
-  };
-
   # Video Player
   programs.mpv = {
     enable = true;
@@ -318,7 +242,6 @@ in
     gnome-clocks
     grim
     gthumb
-    heroic
     hypridle
     hyprlock
     hyprpicker
@@ -326,10 +249,9 @@ in
     hyprshot
     hyprsunset
     imv
-    ideaUltimateWrapped
-    dataGripWrapped
     jq
     libreoffice
+    localsend
     mediainfo
     nautilus
     nitch

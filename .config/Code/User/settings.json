@@ -82,6 +82,7 @@
     // LaTeX Workshop
     "latex-workshop.formatting.latex": "latexindent",
     "latex-workshop.latex.outDir": "%DIR%/out",
+    "latex-workshop.latex.autoBuild.run": "never",
 
     
     // Автогенерированные настройки

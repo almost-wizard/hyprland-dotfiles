@@ -1,1 +1,1 @@
-/home/alex/.config/RofiScripts/Dark-Light-Mode/Dark/dark.sh
+/home/alex/.config/RofiScripts/Dark-Light-Mode/Light/light.sh

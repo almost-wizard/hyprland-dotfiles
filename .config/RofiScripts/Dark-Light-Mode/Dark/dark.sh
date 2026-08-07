@@ -59,4 +59,8 @@ if command -v kitty >/dev/null 2>&1; then
 fi
 ln -sfn ~/.config/RofiScripts/Walls/Wall ~/.config/RofiScripts/WallpaperChanger/Wall
 
+if [ -f "$HOME/.gemini/antigravity-cli/settings.json" ]; then
+	sed -i 's/"colorScheme": *"light"/"colorScheme": "dark"/' "$HOME/.gemini/antigravity-cli/settings.json"
+fi
+
 ln -sfn ~/.config/RofiScripts/Dark-Light-Mode/Light/light.sh ~/.config/swaync/scripts/changetheme.sh

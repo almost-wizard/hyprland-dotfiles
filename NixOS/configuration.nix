@@ -25,13 +25,16 @@ in
 
   # Bootloader
   boot.loader = {
-    efi.canTouchEfiVariables = false;
+    efi.canTouchEfiVariables = true;
     efi.efiSysMountPoint = "/boot/efi";
-    timeout = 0;
+    timeout = 5;
     systemd-boot = {
       enable = true;
       configurationLimit = 5;
       graceful = true;
+      extraInstallCommands = ''
+        bootctl set-timeout 5
+      '';
     };
   };
   boot.kernelPackages = pkgs.linuxPackages;
@@ -47,6 +50,16 @@ in
     "kvm-intel"
     "uinput"
     "xpad"
+  ];
+  # Blacklist Intel DTT/thermal drivers to fix constant high fan speeds (5400+ RPM) on Huawei MateBook 14s (2022).
+  # This returns thermal/fan control to the BIOS, which behaves much quieter.
+  boot.blacklistedKernelModules = [
+    "int3400_thermal"
+    "int3403_thermal"
+    "int340x_thermal_zone"
+    "processor_thermal_device"
+    "processor_thermal_device_pci"
+    "processor_thermal_soc_slider"
   ];
   boot.extraModulePackages = [ ];
   boot.resumeDevice = "/dev/disk/by-uuid/c95c8d22-0de2-4e0d-a8f4-d0951c736c83";
@@ -72,16 +85,16 @@ in
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
   networking.firewall.enable = true;
-  boot.kernel.sysctl = {
-    "fs.inotify.max_user_watches" = 1048576;
-    "fs.inotify.max_user_instances" = 1024;
-  };
-  networking.firewall.trustedInterfaces = [ "docker0" "zt+" ];
+  networking.firewall.trustedInterfaces = [ "docker0" ];
+
+  # LocalSend port exception
+  networking.firewall.allowedTCPPorts = [ 53317 ];
+  networking.firewall.allowedUDPPorts = [ 53317 ];
 
   services.resolved.enable = true;
   services.netbird.enable = true;
-  services.zerotierone.enable = true;
 
+  # AmneziaVPN
   systemd.services.amnezia-vpn = {
     description = "AmneziaVPN Background Service";
     after = [ "network.target" "network-online.target" ];
@@ -109,43 +122,7 @@ in
 
   # Use power-profiles-daemon for explicit manual profile switching.
   # TLP conflicts with this workflow by reapplying AC/BAT policies.
-  services.tlp.enable = false;
   services.power-profiles-daemon.enable = true;
-  services.thermald.enable = true;
-  # MateBook firmware exposes incomplete adaptive thermal zones for thermald.
-  # Run thermald in non-adaptive mode to avoid service startup failure.
-  systemd.services.thermald.serviceConfig.ExecStart = lib.mkForce
-    "${pkgs.thermald}/sbin/thermald --no-daemon --dbus-enable";
-
-  # systemd.services.auto-power-profile-on-battery = {
-  #   description = "Auto switch power profile to balanced on battery";
-  #   wantedBy = [ "multi-user.target" ];
-  #   after = [ "power-profiles-daemon.service" ];
-  #   wants = [ "power-profiles-daemon.service" ];
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #   };
-  #   script = ''
-  #     mains_online=0
-  #     for ps in /sys/class/power_supply/*; do
-  #       if [ -f "$ps/type" ] && [ -f "$ps/online" ] && [ "$(cat "$ps/type")" = "Mains" ]; then
-  #         if [ "$(cat "$ps/online")" = "1" ]; then
-  #           mains_online=1
-  #           break
-  #         fi
-  #       fi
-  #     done
-  #
-  #     if [ "$mains_online" = "0" ]; then
-  #       ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced || true
-  #     else
-  #       ${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance || true
-  #     fi
-  #
-  #     # Signal waybar to update the power mode icon
-  #     ${pkgs.procps}/bin/pkill -SIGRTMIN+11 -u ${desktopUser} waybar || true
-  #   '';
-  # };
 
   systemd.services.low-battery-monitor = {
     description = "Notify on low battery and hibernate before power loss";
@@ -250,7 +227,7 @@ in
     source = "${pkgs-unstable.throne}/bin/Throne";
     owner = "root";
     group = "root";
-    capabilities = "cap_net_admin+ep";
+    capabilities = "cap_net_admin,cap_net_bind_service+ep";
   };
 
   # Throne talks to systemd-resolved for per-link DNS and routing changes.
@@ -266,12 +243,6 @@ in
       }
     });
   '';
-
-  # RPCS3 memory lock fix
-  security.pam.loginLimits = [
-    { domain = "@users"; type = "soft"; item = "memlock"; value = "unlimited"; }
-    { domain = "@users"; type = "hard"; item = "memlock"; value = "unlimited"; }
-  ];
 
   # Localization
   time.timeZone = "Europe/Moscow";
@@ -445,7 +416,6 @@ in
     ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
     ++ (with pkgs; [
       inputs.matugen.packages.${config.nixpkgs.hostPlatform.system}.default
-      inputs.prism-cracked.packages.${config.nixpkgs.hostPlatform.system}.prismlauncher
       alsa-plugins
       android-tools
       aseprite
@@ -483,12 +453,12 @@ in
       htop
       jq
       kdePackages.qt6ct
+      krita
       lazydocker
       lazygit
       libsForQt5.qt5ct
       mangohud
       evtest
-      gamepad-tool
       maven
       micro
       neo
@@ -496,15 +466,11 @@ in
       ninja
       nixfmt
       ntfs3g
-      openai-whisper
-      ollama
-      llama-cpp
       p7zip
-      haskellPackages.pdftotext
+      pinta
       playerctl
       postman
       powertop
-      ppsspp-sdl-wayland
       protonplus
       python3
       python3Packages.pip
@@ -512,7 +478,6 @@ in
       python3Packages.virtualenv
       qgis
       rar
-      rpcs3
       ruff
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
@@ -523,26 +488,19 @@ in
       tenacity
       tex-fmt
       texliveFull
+      transmission_4-gtk
       tree
       tmux
       unzip
       unrar
-      valgrind
       vim
       vscode
       wget
-      winetricks
       xclip
       xsel
       yt-dlp
       zip
     ]);
-
-  # Compatibility
-  # Codex CLI expects a system bubblewrap at /usr/bin/bwrap.
-  systemd.tmpfiles.rules = [
-    "L+ /usr/bin/bwrap - - - - ${pkgs.bubblewrap}/bin/bwrap"
-  ];
 
   # Fonts
   fonts.packages =
