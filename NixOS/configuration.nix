@@ -476,6 +476,7 @@ in
       python3Packages.pip
       python3Packages.tkinter
       python3Packages.virtualenv
+      pulsemixer
       qgis
       rar
       ruff

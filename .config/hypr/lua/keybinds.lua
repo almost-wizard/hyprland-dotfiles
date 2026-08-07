@@ -41,6 +41,7 @@ hl.bind("SUPER + N",                 hl.dsp.exec_cmd("swaync-client -d"))
 hl.bind("SUPER + CTRL + N",          hl.dsp.exec_cmd("swaync-client -t"))
 hl.bind("SUPER + CTRL + W",          hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/toggle_tui.sh nmtui"))
 hl.bind("SUPER + CTRL + B",          hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/toggle_tui.sh bluetui"))
+hl.bind("SUPER + CTRL + V",          hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/toggle_tui.sh pulsemixer"))
 
 -- Wallpaper Changer
 hl.bind("SUPER + CTRL + space", hl.dsp.exec_cmd(home .. "/.config/RofiScripts/WallpaperChanger/wall.sh"))
@@ -71,8 +72,6 @@ hl.bind("SUPER + A",         workspaces.focus_grid_relative(-1))
 hl.bind("SUPER + D",         workspaces.focus_grid_relative(1))
 hl.bind("SUPER + SHIFT + A", workspaces.move_active_window_grid_relative(-1))
 hl.bind("SUPER + SHIFT + D", workspaces.move_active_window_grid_relative(1))
-hl.bind("SUPER + S",         workspaces.focus_grid_relative(5))
-hl.bind("SUPER + SHIFT + S", workspaces.move_active_window_grid_relative(5))
 
 -- Navigation only by opened workspaces (e-1 / e+1)
 hl.bind("SUPER + CTRL + A",         workspaces.focus_open_relative(-1))
