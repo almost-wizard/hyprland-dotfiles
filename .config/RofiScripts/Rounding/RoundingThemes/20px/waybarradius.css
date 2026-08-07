@@ -1,0 +1,9 @@
+window#waybar {
+    border-radius: 1.7rem;
+}
+#custom-System, #clock, #custom-kb_layout, #tray, #tray menu, menu, #workspaces, #network, #bluetooth, #pulseaudio, #traywer, #volume, #pulseaudio-slider, #pulseaudio-slider trough, #pulseaudio-slider highlight, #mpris, #custom-theme, #custom-bar, #custom-notifications, #window, #custom-powermenu, #battery, #cpu, #custom-cpu_temp, #custom-fan_speed, #memory, #custom-ram_stats, #custom-pacman, #custom-auto_cpufreq, #custom-refresh_rate, #custom-screenrec, #custom-power_mode, tooltip, tooltip label, #volpower, #netblue, #sysstats, #traywermen {
+    border-radius: 1.5rem;
+}
+#workspaces button, #workspaces button label, #workspaces button.active label {
+    border-radius: 1.25rem;
+}

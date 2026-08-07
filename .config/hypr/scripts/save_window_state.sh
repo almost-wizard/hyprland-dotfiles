@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-config_file="/home/alex/hyprland-dotfiles/.config/hypr/hyprconfigs/hyprwindows-local.conf"
+config_file="/home/alex/hyprland-dotfiles/.config/hypr/lua/windows-local.lua"
 mode="${1:-save}"
 
 regex_escape() {
@@ -45,18 +45,18 @@ if [[ "$floating" != "true" ]]; then
 fi
 
 class_regex="$(regex_escape "$class")"
-matcher="match:class ^(${class_regex})$"
+matcher="class=^(${class_regex})$"
 matcher_label="class=${class}"
 
 if [[ -n "$initial_title" && "$initial_title" != "$class" && "$initial_title" != "$title" ]]; then
   initial_title_regex="$(regex_escape "$initial_title")"
-  matcher="${matcher}, match:initial_title ^(${initial_title_regex})$"
+  matcher="${matcher}, initial_title=^(${initial_title_regex})$"
   matcher_label="${matcher_label} initial_title=${initial_title}"
 fi
 
 rule_key="$(printf '%s' "$matcher" | sha1sum | cut -d' ' -f1)"
-begin_marker="# BEGIN AUTORULE ${rule_key}"
-end_marker="# END AUTORULE ${rule_key}"
+begin_marker="-- BEGIN AUTORULE ${rule_key}"
+end_marker="-- END AUTORULE ${rule_key}"
 timestamp="$(date -Iseconds)"
 
 tmp_file="$(mktemp)"
@@ -69,12 +69,11 @@ if [[ -f "$config_file" ]]; then
   ' "$config_file" >"$tmp_file"
 else
   cat >"$tmp_file" <<'EOF'
-#############################
-### LOCAL WINDOW LAYOUTS ###
-#############################
+---------------------------------
+---- LOCAL WINDOW LAYOUTS ----
+---------------------------------
 
-# This file is managed by ~/.config/hypr/scripts/save_window_state.sh.
-# Generated rules are appended below and reloaded automatically.
+-- This file is managed by ~/.config/hypr/scripts/save_window_state.sh.
 EOF
 fi
 
@@ -93,12 +92,15 @@ fi
 
 {
   printf '\n%s\n' "$begin_marker"
-  printf '# Saved %s for %s\n' "$timestamp" "$matcher_label"
-  printf 'windowrule = float 1, %s\n' "$matcher"
+  printf '-- Saved %s for %s\n' "$timestamp" "$matcher_label"
+  printf 'hl.window_rule({\n'
+  printf '    match = { class = "^(%s)$" },\n' "$class_regex"
+  printf '    float = true,\n'
   if [[ "$width" -gt 0 && "$height" -gt 0 ]]; then
-    printf 'windowrule = size %s %s, %s\n' "$width" "$height" "$matcher"
+    printf '    size = { %s, %s },\n' "$width" "$height"
   fi
-  printf 'windowrule = move %s %s, %s\n' "$pos_x" "$pos_y" "$matcher"
+  printf '    move = { %s, %s },\n' "$pos_x" "$pos_y"
+  printf '})\n'
   printf '%s\n' "$end_marker"
 } >>"$tmp_file"
 

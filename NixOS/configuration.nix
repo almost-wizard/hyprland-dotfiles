@@ -286,6 +286,7 @@ in
   nixpkgs.overlays = [
     inputs.antigravity-nix.overlays.default
   ];
+
   programs.nix-ld.enable = true;
   zramSwap.enable = true;
 
@@ -428,7 +429,6 @@ in
       gnome-themes-extra
       sddm-astronaut
       sddmAstronautHyprlandKathTheme
-      google-antigravity-no-fhs
       google-antigravity-cli
       age
       bat

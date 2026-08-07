@@ -1,7 +1,10 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
-ln -sf ~/.config/RofiScripts/Rounding/RoundingThemes/0px/hyprdecoration.conf ~/.config/hypr/hyprconfigs/hyprdecoration.conf
+echo "return 0" > ~/.config/colors/rounding.lua
 ln -sf ~/.config/RofiScripts/Rounding/RoundingThemes/0px/rofiradius.rasi ~/.config/colors/rofiradius.rasi
 ln -sf ~/.config/RofiScripts/Rounding/RoundingThemes/0px/swayncradius.css ~/.config/colors/swayncradius.css
-swaync-client -R
-swaync-client -rs
+ln -sf ~/.config/RofiScripts/Rounding/RoundingThemes/0px/waybarradius.css ~/.config/colors/waybarradius.css
+hyprctl reload >/dev/null 2>&1
+swaync-client -R >/dev/null 2>&1
+swaync-client -rs >/dev/null 2>&1
+pkill -SIGUSR2 waybar >/dev/null 2>&1 || true

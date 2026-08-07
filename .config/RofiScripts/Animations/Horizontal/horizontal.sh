@@ -1,3 +1,4 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
-ln -sf ~/.config/RofiScripts/Animations/Horizontal/hypranimations.conf ~/.config/hypr/hyprconfigs/hypranimations.conf
+echo 'return "slide"' > ~/.config/colors/animation_style.lua
+hyprctl reload >/dev/null 2>&1

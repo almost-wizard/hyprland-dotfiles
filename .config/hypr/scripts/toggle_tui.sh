@@ -10,7 +10,6 @@ fi
 app="$1"
 class="tui-toggle-${app}"
 title="TUI_TOGGLE_${app^^}"
-geom="[float; size 879 879]"
 
 addr="$(hyprctl -j clients | jq -r --arg class "$class" '
   map(select(.class == $class or .initialClass == $class)) | .[0].address // empty
@@ -19,11 +18,11 @@ addr="$(hyprctl -j clients | jq -r --arg class "$class" '
 if [[ -n "$addr" ]]; then
   active_addr="$(hyprctl -j activewindow | jq -r '.address // empty')"
   if [[ "$active_addr" == "$addr" ]]; then
-    hyprctl dispatch closewindow "address:${addr}" >/dev/null
+    hyprctl dispatch 'hl.dsp.window.close({ window = "address:'"${addr}"'" })' >/dev/null
   else
-    hyprctl dispatch focuswindow "address:${addr}" >/dev/null
+    hyprctl dispatch 'hl.dsp.focus({ window = "address:'"${addr}"'" })' >/dev/null
   fi
   exit 0
 fi
 
-hyprctl dispatch exec "${geom} kitty --class ${class} --title ${title} ${app}" >/dev/null
+hyprctl dispatch 'hl.dsp.exec_cmd("kitty --class '"${class}"' --title '"${title}"' '"${app}"'", { float = true, size = { 879, 879 }, center = true })' >/dev/null

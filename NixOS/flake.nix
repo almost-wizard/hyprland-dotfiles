@@ -18,10 +18,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # v0.55 switched the default configuration language from hyprlang (.conf)
-    # to Lua. Keep the last hyprlang release until the existing dotfiles have
-    # been migrated.
-    hyprland.url = "github:hyprwm/Hyprland/v0.54.3";
+    # Hyprland updated to latest version (v0.55+ with Lua configuration)
+    hyprland.url = "github:hyprwm/Hyprland";
+
+    quickshell-overview = {
+      url = "github:Shanu-Kumawat/quickshell-overview";
+      flake = false;
+    };
 
   };
 
@@ -55,7 +58,7 @@
           {
             networking.hostName = "nixos";
             home-manager.extraSpecialArgs = {
-              inherit hyprland;
+              inherit inputs hyprland;
               pkgs-unstable = unstablePkgs;
             };
             home-manager.users.alex = import ./home.nix;

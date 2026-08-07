@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
 : "${LC_ALL:=C.UTF-8}"
 : "${LANG:=C.UTF-8}"
@@ -10,7 +10,8 @@ chosen=$(
 	printf "%s\n" \
 		"$back_label" \
 		"󰃬 Calculator" \
-		"󰞅 Emoji" |
+		"󰞅 Emoji" \
+		"󰐃 Window Layouts" |
 		rofi -dmenu -i -selected-row 1 -config "$HOME/.config/RofiScripts/SystemSettings/S.rasi" \
 			-kb-move-char-back "" -kb-move-char-forward "" -kb-custom-1 "Left" \
 			-kb-accept-entry "Control+j,Control+m,Return,KP_Enter,Right"
@@ -25,5 +26,6 @@ fi
 case "$chosen" in
 	"󰃬 Calculator") ~/.config/RofiScripts/RofiCalc/Calc.sh ;;
 	"󰞅 Emoji") ~/.config/RofiScripts/Emoji/Emoji.sh ;;
+	"󰐃 Window Layouts") ~/.config/RofiScripts/Launcher/WindowLayouts.sh ;;
 	*) exit 1 ;;
 esac

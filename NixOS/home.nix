@@ -1,5 +1,18 @@
-{ config, pkgs, pkgs-unstable, hyprland, ... }:
+{ config, pkgs, pkgs-unstable, hyprland, inputs, ... }:
 
+let
+  quickshellOverview = pkgs.runCommand "quickshell-overview-patched" { } ''
+    cp -R ${inputs.quickshell-overview}/. "$out"
+    substituteInPlace "$out/common/functions/ColorUtils.qml" \
+      --replace-fail \
+      'function applyAlpha(color, alpha) {' \
+      'function applyAlpha(color, alpha) { if (!color) return "transparent";'
+    substituteInPlace "$out/modules/overview/OverviewWindow.qml" \
+      --replace-fail \
+      'property var iconPath: Quickshell.iconPath(iconName, "image-missing")' \
+      'property var iconPath: entry?.icon ? Quickshell.iconPath(iconName) : ""'
+  '';
+in
 {
   imports = [
   ];
@@ -7,6 +20,33 @@
   home.stateVersion = "26.05";
   home.username = "alex";
   home.homeDirectory = "/home/alex";
+
+  # Deploy Quickshell Overview
+  home.file.".config/quickshell/overview" = {
+    source = quickshellOverview;
+    recursive = true;
+  };
+
+  home.file.".config/quickshell/overview/config.json".text = builtins.toJSON {
+    appearance = {
+      colorSource = "matugen";
+      font.family = {
+        main = "JetBrains Mono Nerd Font";
+        title = "JetBrains Mono Nerd Font";
+        expressive = "JetBrains Mono Nerd Font";
+      };
+    };
+    overview = {
+      rows = 2;
+      columns = 5;
+      hideEmptyRows = true;
+      previewsEnabled = true;
+      previewMode = "live";
+      includeInactiveMonitorPreviews = true;
+      showSpecialWorkspaces = true;
+      specialWorkspaces = [ "magic" ];
+    };
+  };
 
   # mimeApps
   xdg.mimeApps.enable = true;
@@ -263,6 +303,8 @@
     python3Packages.pip
     python3Packages.virtualenv
     pywalfox-native
+    quickshell
+    qt6.qtwayland
     rofimoji
     slurp
     socat
