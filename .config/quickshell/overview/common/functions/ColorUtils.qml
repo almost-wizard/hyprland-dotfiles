@@ -1,1 +1,1 @@
-/nix/store/0b68054lw66vf8xksabl3z6p2lir491h-home-manager-files/.config/quickshell/overview/common/functions/ColorUtils.qml
+/nix/store/xmqs8528hlxkq11k3jasr2kzf9sqsjll-home-manager-files/.config/quickshell/overview/common/functions/ColorUtils.qml

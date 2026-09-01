@@ -216,6 +216,9 @@ in
   # SwayOSD service
   services.swayosd.enable = true;
 
+  # EasyEffects audio processing service
+  services.easyeffects.enable = true;
+
   # Video Player
   programs.mpv = {
     enable = true;

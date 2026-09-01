@@ -2,11 +2,18 @@
 
 stdenv.mkDerivation rec {
   pname = "ktalk";
-  version = "3.5.1";
+
+  # Как обновить:
+  # 1. Поменяйте `version` (например, "3.8.0")
+  # 2. Получите SRI хэш одной командой:
+  #    nix store prefetch-file https://st.ktalk.host/ktalk-app/linux/ktalk3.8.0amd64.deb
+  #    (или поставьте sha256 = pkgs.lib.fakeHash; и скопируйте хэш из ошибки nixos-rebuild)
+  # 3. Вставьте новый хэш в sha256 ниже.
+  version = "3.7.0";
 
   src = pkgs.fetchurl {
     url = "https://st.ktalk.host/ktalk-app/linux/ktalk${version}amd64.deb";
-    sha256 = "sha256-x3l80Vv5gA52O/tiqxY9xxVbz7wKKxv0W3dp6dodHx8=";
+    sha256 = "sha256-oZuSaSizg6F/phPaJ8Od6rR6Sb6TjyNq838e1g/ZkjA=";
   };
 
   nativeBuildInputs = with pkgs; [

@@ -6,6 +6,8 @@
 
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    nixpkgs-vpn.url = "github:nixos/nixpkgs/nixos-unstable";
+
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -33,6 +35,7 @@
       nixpkgs,
       home-manager,
       nixpkgs-unstable,
+      nixpkgs-vpn,
       antigravity-nix,
       hyprland,
       ...
@@ -43,6 +46,10 @@
         inherit system;
         config.allowUnfree = true;
       };
+      vpnPkgs = import nixpkgs-vpn {
+        inherit system;
+        config.allowUnfree = true;
+      };
     in
     {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
@@ -50,6 +57,7 @@
         specialArgs = {
           inherit inputs system hyprland;
           pkgs-unstable = unstablePkgs;
+          pkgs-vpn = vpnPkgs;
         };
 
         modules = [
@@ -60,6 +68,7 @@
             home-manager.extraSpecialArgs = {
               inherit inputs hyprland;
               pkgs-unstable = unstablePkgs;
+              pkgs-vpn = vpnPkgs;
             };
             home-manager.users.alex = import ./home.nix;
           }

@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, pkgs-unstable, lib, ... }:
+{ config, pkgs, inputs, pkgs-unstable, pkgs-vpn, lib, ... }:
 
 let
   desktopUser = builtins.head (builtins.attrNames config.home-manager.users);
@@ -103,7 +103,7 @@ in
 
     serviceConfig = {
       Type = "simple";
-      ExecStart = "${pkgs-unstable.amnezia-vpn}/bin/AmneziaVPN-service";
+      ExecStart = "${pkgs-vpn.amnezia-vpn}/bin/AmneziaVPN-service";
       Restart = "always";
       RestartSec = 5;
       User = "root";
@@ -224,7 +224,7 @@ in
 
   # Throne Settings
   security.wrappers.Throne = {
-    source = "${pkgs-unstable.throne}/bin/Throne";
+    source = "${pkgs-vpn.throne}/bin/Throne";
     owner = "root";
     group = "root";
     capabilities = "cap_net_admin,cap_net_bind_service+ep";
@@ -406,12 +406,14 @@ in
 
   # System packages (only system-level stuff)
   environment.systemPackages =
-    (with pkgs-unstable; [
+    (with pkgs-vpn; [
       amnezia-vpn
       amneziawg-tools
+      throne
+    ])
+    ++ (with pkgs-unstable; [
       codex
       gemini-cli
-      throne
       yandex-music
     ])
     ++ [ (pkgs.callPackage ./ktalk.nix { }) ]
@@ -476,6 +478,9 @@ in
       python3Packages.pip
       python3Packages.tkinter
       python3Packages.virtualenv
+      (instaloader.overrideAttrs (old: {
+        propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ python3Packages.browser-cookie3 ];
+      }))
       pulsemixer
       qgis
       rar
